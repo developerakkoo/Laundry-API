@@ -1,0 +1,286 @@
+const { cookieOptions } = require("../constant");
+const Admin = require("../models/admin.model");
+const cashbackModel = require("../models/cashback.model");
+const servicesModel = require("../models/services.model");
+const partnerModel = require("../models/partner.model");
+const orderModel = require("../models/order.model");
+const shopModel = require("../models/shope.model");
+const {
+    asyncHandler,
+    sendResponse,
+    generateAccessAndRefreshTokens,
+    apiResponse,
+} = require("../utils/helper.utils");
+const userModel = require("../models/user.model");
+const deliveryAgentModel = require("../models/deliveryAgent.model");
+
+exports.createAdmin = asyncHandler(async (req, res) => {
+    const { adminType, categoryAccess, userAccess, email, password } = req.body;
+    const isExistAdmin = await Admin.findOne({ email });
+    if (isExistAdmin) {
+        return sendResponse(res, 400, null, "Admin already exist");
+    }
+    const admin = await Admin.create({
+        adminType,
+        categoryAccess,
+        userAccess,
+        email,
+        password,
+    });
+    const newAdmin = await Admin.findById(admin._id);
+    if (!newAdmin) {
+        return sendResponse(
+            res,
+            400,
+            null,
+            "Something went wrong while creating the admin",
+        );
+    }
+    return sendResponse(res, 201, newAdmin, "Admin created successfully");
+});
+
+exports.login = asyncHandler(async (req, res) => {
+    const { email, password } = req.body;
+    const admin = await Admin.findOne({ email }).select("+password");
+    if (!admin) {
+        return sendResponse(res, 404, null, "Admin not found");
+    }
+    const isMatch = await admin.isPasswordCorrect(password);
+    if (!isMatch) {
+        return sendResponse(res, 400, null, "Invalid email or password");
+    }
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
+        admin,
+        1,
+    );
+    admin.password = "********";
+    return res
+        .status(200)
+        .cookie("access-token", accessToken, cookieOptions)
+        .cookie("refresh-token", refreshToken, cookieOptions)
+        .json(
+            new apiResponse(200, admin, "Admin login successful, Welcome back"),
+        );
+});
+
+exports.logout = asyncHandler(async (req, res) => {
+    await Admin.findByIdAndUpdate(req.user._id, {
+        $unset: {
+            refreshToken: 1,
+        },
+    });
+    return res
+        .status(200)
+        .clearCookie("access-token", cookieOptions)
+        .clearCookie("refresh-token", cookieOptions)
+        .json(new apiResponse(200, null, "Admin logout successful"));
+});
+
+exports.addAdmin = asyncHandler(async (req, res) => {
+    const {
+        adminType,
+        categoryAccess,
+        userAccess,
+        adminAccess,
+        email,
+        password,
+    } = req.body;
+    if (req.user.adminType != 0 || req.user.adminAccess != 0) {
+        return sendResponse(
+            res,
+            403,
+            null,
+            "You don't have permission to perform this action",
+        );
+    }
+    const isExistAdmin = await Admin.findOne({ email });
+    if (isExistAdmin) {
+        return sendResponse(res, 400, null, "Admin already exist");
+    }
+    const admin = await Admin.create({
+        adminType,
+        categoryAccess,
+        adminAccess,
+        userAccess,
+        email,
+        password,
+    });
+    const newAdmin = await Admin.findById(admin._id);
+    if (!newAdmin) {
+        return sendResponse(
+            res,
+            400,
+            null,
+            "Something went wrong while creating the admin",
+        );
+    }
+    return sendResponse(res, 201, newAdmin, "Admin created successfully");
+});
+
+exports.addCashbackOffer = asyncHandler(async (req, res) => {
+    const { orderAmountFrom, orderAmountTo, cashbackPercent } = req.body;
+    const cashback = await cashbackModel.create({
+        orderAmountFrom,
+        orderAmountTo,
+        cashbackPercent,
+    });
+    const newCashback = await cashbackModel.findById(cashback._id);
+    if (!newCashback) {
+        return sendResponse(
+            res,
+            400,
+            null,
+            "Something went wrong while creating the cashback offer",
+        );
+    }
+    return sendResponse(
+        res,
+        201,
+        newCashback,
+        "Cashback offer created successfully",
+    );
+});
+
+exports.updateCashbackOffer = asyncHandler(async (req, res) => {
+    const { orderAmountFrom, orderAmountTo, cashbackPercent } = req.body;
+    const cashback = await cashbackModel.findByIdAndUpdate(
+        req.params.id,
+        {
+            orderAmountFrom,
+            orderAmountTo,
+            cashbackPercent,
+        },
+        { new: true },
+    );
+    if (!cashback) {
+        return sendResponse(
+            res,
+            400,
+            null,
+            "Something went wrong while updating the cashback offer",
+        );
+    }
+    return sendResponse(
+        res,
+        200,
+        cashback,
+        "Cashback offer updated successfully",
+    );
+});
+
+exports.deleteCashbackOffer = asyncHandler(async (req, res) => {
+    const cashback = await cashbackModel.findByIdAndDelete(req.params.id);
+    if (!cashback) {
+        return sendResponse(res, 400, null, "Cashback offer not founds");
+    }
+    return sendResponse(
+        res,
+        200,
+        cashback._id,
+        "Cashback offer deleted successfully",
+    );
+});
+
+exports.getAllCashbackOffer = asyncHandler(async (req, res) => {
+    const cashback = await cashbackModel.find();
+    if (cashback.length === 0) {
+        return sendResponse(res, 404, null, "Cashback offer not founds");
+    }
+    return sendResponse(
+        res,
+        200,
+        cashback,
+        "Cashback offer fetched successfully",
+    );
+});
+
+exports.getCashbackOfferById = asyncHandler(async (req, res) => {
+    const cashback = await cashbackModel.findById(req.params.id);
+    if (!cashback) {
+        return sendResponse(res, 404, null, "Cashback offer not found");
+    }
+    return sendResponse(
+        res,
+        200,
+        cashback,
+        "Cashback offer fetched successfully",
+    );
+});
+
+/***** Admin Dash *****/
+exports.getDashboardStats = asyncHandler(async (req, res) => {
+    const [
+        totalUser,
+        totalPartner,
+        totalDeliveryBoy,
+        totalOrders,
+        totalInProgressOrders,
+        totalCompletedOrders,
+        totalCancelledOrders,
+        totalShops,
+        totalServices,
+    ] = await Promise.all([
+        userModel.countDocuments(),
+        partnerModel.countDocuments(),
+        deliveryAgentModel.countDocuments(),
+        orderModel.countDocuments(),
+        orderModel.countDocuments({ status: "In-Process" }),
+        orderModel.countDocuments({ status: "Completed" }),
+        orderModel.countDocuments({ status: "Cancelled" }),
+        shopModel.countDocuments(),
+        servicesModel.countDocuments(),
+    ]);
+    return sendResponse(
+        res,
+        200,
+        {
+            totalUser,
+            totalPartner,
+            totalDeliveryBoy,
+            totalOrders,
+            totalInProgressOrders,
+            totalCompletedOrders,
+            totalCancelledOrders,
+            totalShops,
+            totalServices,
+        },
+        "Admin dash stats fetched successfully",
+    );
+});
+
+exports.totalRevenueChartData = asyncHandler(async (req, res) => {
+    const { sort = "dayOfMonth" } = req.query;
+
+    const pipeline = [
+        {
+            $project: {
+                totalAmount: 1,
+                sortField: {
+                    [`$${sort}`]: "$createdAt",
+                },
+            },
+        },
+        {
+            $group: {
+                _id: "$sortField",
+                revenue: {
+                    $sum: "$totalAmount",
+                },
+            },
+        },
+        {
+            $project: {
+                _id: 0,
+                [sort]: "$_id",
+                revenue: 1,
+            },
+        },
+    ];
+    const totalRevenue = await orderModel.aggregate(pipeline);
+    return sendResponse(
+        res,
+        200,
+        totalRevenue,
+        "Total revenue fetched successfully",
+    );
+});
