@@ -16,6 +16,20 @@ router.put("/update-profile", userController.updateUser);
 
 router.get("/get-current-user", userController.getCurrentUser);
 
+/* User Address Routes*/
+
+router.post("/add-address", userController.addAddresses);
+
+router.get("/get/all-address/:userId", userController.getAllAddressesByUserId);
+
+router.get("/get/addressById/:addressId", userController.getAddressesById);
+
+router.put("/select-address", userController.selectAddresses);
+
+router.put("/update-address", userController.updateAddress);
+
+router.delete("/delete-address/:addressId", userController.deleteAddress);
+
 /* Category routes for users */
 
 router.get("/get-category/:id", categoryController.getCategoryById);

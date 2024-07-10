@@ -13,14 +13,6 @@ const userSchema = new Schema(
             type: String,
             required: true,
         },
-        address: {
-            addressLine1: String,
-            addressLine2: String,
-            addressLine3: String,
-            landmark: String,
-            city: String,
-            state: String,
-        },
         email: {
             type: String,
             required: true,

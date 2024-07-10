@@ -1,16 +1,18 @@
 const User = require("../models/user.model");
+const userAddress = require("../models/userAddress.model");
 const {
     asyncHandler,
     sendResponse,
     generateAccessAndRefreshTokens,
     apiResponse,
+    apiError,
 } = require("../utils/helper.utils");
 const { cookieOptions } = require("../constant");
 const walletModel = require("../models/wallet.model");
 const Cart = require("../models/cart.model");
 
 exports.registerUser = asyncHandler(async (req, res) => {
-    const { name, email, phoneNumber, address, password } = req.body;
+    const { name, email, phoneNumber, password } = req.body;
     const isExistUser = await User.findOne({
         $or: [{ email }, { phoneNumber }],
     });
@@ -22,7 +24,6 @@ exports.registerUser = asyncHandler(async (req, res) => {
         email,
         password,
         phoneNumber,
-        address,
     });
     const newUser = await User.findById(user._id);
     if (!newUser) {
@@ -86,14 +87,6 @@ exports.updateUser = asyncHandler(async (req, res) => {
                 name,
                 email,
                 phoneNumber,
-                ...(address && {
-                    "address.addressLine1": address.addressLine1,
-                    "address.addressLine2": address.addressLine2,
-                    "address.addressLine3": address.addressLine3,
-                    "address.landmark": address.landmark,
-                    "address.city": address.city,
-                    "address.state": address.state,
-                }),
             },
         },
         { new: true },
@@ -178,4 +171,93 @@ exports.deleteUserById = asyncHandler(async (req, res) => {
         return sendResponse(res, 404, null, "User not found");
     }
     return sendResponse(res, 200, user._id, "User deleted successfully");
+});
+
+exports.addAddresses = asyncHandler(async (req, res) => {
+    const { type, address, landmark, pinCode, selected } = req.body;
+    const savedAddress = await userAddress.create({
+        userId: req.user.userId,
+        type,
+        address,
+        landmark,
+        pinCode,
+        selected,
+    });
+
+    return sendResponse(res, 201, savedAddress, "Address saved successfully");
+});
+
+exports.selectAddresses = asyncHandler(async (req, res) => {
+    const { addressId, selected } = req.body;
+    const selectedAddress = await userAddress.findByIdAndUpdate(
+        addressId,
+        {
+            $set: {
+                selected: selected,
+            },
+        },
+        {
+            new: true,
+        },
+    );
+
+    return sendResponse(
+        res,
+        200,
+        selectedAddress,
+        "Address selected successfully",
+    );
+});
+
+exports.getAllAddressesByUserId = asyncHandler(async (req, res) => {
+    const userId = req.params.userId || req.user.userId;
+    const userAddresses = await userAddress.find({ userId: userId });
+    return sendResponse(200, userAddresses, "Address fetched successfully");
+});
+
+exports.getAddressesById = asyncHandler(async (req, res) => {
+    const { addressId } = req.params;
+    const userAddresses = await userAddress.findById(addressId);
+    return sendResponse(200, userAddresses, "Address fetched successfully");
+});
+
+exports.updateAddress = asyncHandler(async (req, res) => {
+    const { addressId } = req.body;
+    const savedAddress = await userAddress.findById(addressId);
+    if (!savedAddress) {
+        throw new apiError(404, "Address not found");
+    }
+    savedAddress.type =
+        req.body.type != undefined ? req.body.type : savedAddress.type;
+    savedAddress.address =
+        req.body.address != undefined ? req.body.address : savedAddress.address;
+    savedAddress.selected =
+        req.body.landmark != undefined
+            ? req.body.landmark
+            : savedAddress.landmark;
+    savedAddress.pinCode =
+        req.body.pinCode != undefined ? req.body.pinCode : savedAddress.pinCode;
+    savedAddress.selected =
+        req.body.selected != undefined
+            ? req.body.selected
+            : savedAddress.selected;
+    const updatedAddress = await savedAddress.save();
+
+    return sendResponse(200, updatedAddress, "Address updated successfully");
+});
+
+exports.deleteAddress = asyncHandler(async (req, res) => {
+    const { addressId } = req.params;
+    const savedAddress = await userAddress.findById(addressId);
+    if (!savedAddress) {
+        throw new apiError(404, "Address not found");
+    }
+    if (savedAddress.userId.toString() != req.user.userId.toString()) {
+        throw new apiError(
+            400,
+            "Address not deleted, you can only delete your address",
+        );
+    }
+    await userAddress.deleteOne({ _id: addressId });
+    return sendResponse(200, {}, "Address deleted successfully");
 });
