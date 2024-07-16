@@ -523,7 +523,7 @@ exports.getAllServiceByCategoryId = asyncHandler(async (req, res) => {
 });
 
 exports.getAllServices = asyncHandler(async (req, res) => {
-    const { search, categoryId } = req.query;
+    const { search, categoryId, lowerPrice, upperPrice } = req.query;
     const pageNumber = parseInt(req.query.page) || 1;
     const pageSize = parseInt(req.query.pageSize) || 10;
     const skip = (pageNumber - 1) * pageSize;
@@ -550,9 +550,26 @@ exports.getAllServices = asyncHandler(async (req, res) => {
         }
     }
 
+    // Sort by price range
+    if (lowerPrice && upperPrice) {
+        dbQuery.price = {
+            $gte: lowerPrice,
+            $lte: upperPrice,
+        };
+    }
+
     const dataCount = await servicesModel.countDocuments(dbQuery);
     const service = await servicesModel
         .find(dbQuery)
+        .populate({ path: "categoryId",select:"_id name image_url" })
+        .populate({
+            path: "shopeId",
+            select: "_id name address partnerId",
+            populate: {
+                path: "partnerId",
+                select: "_id name phoneNumber profile_image",
+            },
+        })
         .skip(skip)
         .limit(pageSize);
 

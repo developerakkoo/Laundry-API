@@ -47,8 +47,10 @@ router.post("/add-admin", adminController.addAdmin);
 
 router.post(
     "/add-category",
+    multerUpload,
     categoryPermission,
     categoryController.addCategory,
+    categoryController.uploadCategoryImage,
 );
 
 router.get(
@@ -266,6 +268,9 @@ router.delete(
 
 router.get("/dashboard/stats", adminController.getDashboardStats);
 
-router.get("/dashboard/totalRevenue/chart", adminController.totalRevenueChartData);
+router.get(
+    "/dashboard/totalRevenue/chart",
+    adminController.totalRevenueChartData,
+);
 
 module.exports = { adminRoutes: router };

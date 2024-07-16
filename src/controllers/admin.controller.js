@@ -53,13 +53,16 @@ exports.login = asyncHandler(async (req, res) => {
         admin,
         1,
     );
-    admin.password = "********";
     return res
         .status(200)
         .cookie("access-token", accessToken, cookieOptions)
         .cookie("refresh-token", refreshToken, cookieOptions)
         .json(
-            new apiResponse(200, admin, "Admin login successful, Welcome back"),
+            new apiResponse(
+                200,
+                { _id: admin._id, accessToken, refreshToken },
+                "Admin login successful, Welcome back",
+            ),
         );
 });
 

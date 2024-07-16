@@ -30,6 +30,19 @@ const userAddressSchema = new Schema(
             required: true,
             default: false,
         },
+        location: {
+            type: {
+                type: String,
+                enum: ["Point"], // Only 'Point' type is allowed
+                required: true,
+                default: "Point",
+            },
+            coordinates: {
+                type: [Number], // Longitude and latitude
+                required: true,
+                default: 0,
+            },
+        },
     },
     { timestamps: true },
 );

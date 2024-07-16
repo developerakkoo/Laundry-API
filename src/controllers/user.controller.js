@@ -52,16 +52,19 @@ exports.login = asyncHandler(async (req, res) => {
         return sendResponse(res, 400, null, "Incorrect credentials");
     }
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
-        user._id,
+        user,
         2,
     );
-    user.password = "********";
     return res
         .status(200)
         .cookie("access-token", accessToken, cookieOptions)
         .cookie("refresh-token", refreshToken, cookieOptions)
         .json(
-            new apiResponse(200, user, "User login successful, Welcome back"),
+            new apiResponse(
+                200,
+                { _id: user._id, accessToken, refreshToken },
+                "User login successful, Welcome back",
+            ),
         );
 });
 
@@ -174,14 +177,18 @@ exports.deleteUserById = asyncHandler(async (req, res) => {
 });
 
 exports.addAddresses = asyncHandler(async (req, res) => {
-    const { type, address, landmark, pinCode, selected } = req.body;
+    const { type, address, landmark, pinCode, selected, lng, lat } = req.body;
     const savedAddress = await userAddress.create({
-        userId: req.user.userId,
+        userId: req.user._id,
         type,
         address,
         landmark,
         pinCode,
         selected,
+        location: {
+            type: "Point",
+            coordinates: [lng, lat],
+        },
     });
 
     return sendResponse(res, 201, savedAddress, "Address saved successfully");
@@ -210,15 +217,25 @@ exports.selectAddresses = asyncHandler(async (req, res) => {
 });
 
 exports.getAllAddressesByUserId = asyncHandler(async (req, res) => {
-    const userId = req.params.userId || req.user.userId;
+    const userId = req.params.userId || req.user._id;
     const userAddresses = await userAddress.find({ userId: userId });
-    return sendResponse(200, userAddresses, "Address fetched successfully");
+    return sendResponse(
+        res,
+        200,
+        userAddresses,
+        "Address fetched successfully",
+    );
 });
 
 exports.getAddressesById = asyncHandler(async (req, res) => {
     const { addressId } = req.params;
     const userAddresses = await userAddress.findById(addressId);
-    return sendResponse(200, userAddresses, "Address fetched successfully");
+    return sendResponse(
+        res,
+        200,
+        userAddresses,
+        "Address fetched successfully",
+    );
 });
 
 exports.updateAddress = asyncHandler(async (req, res) => {
@@ -243,7 +260,12 @@ exports.updateAddress = asyncHandler(async (req, res) => {
             : savedAddress.selected;
     const updatedAddress = await savedAddress.save();
 
-    return sendResponse(200, updatedAddress, "Address updated successfully");
+    return sendResponse(
+        res,
+        200,
+        updatedAddress,
+        "Address updated successfully",
+    );
 });
 
 exports.deleteAddress = asyncHandler(async (req, res) => {
@@ -252,12 +274,12 @@ exports.deleteAddress = asyncHandler(async (req, res) => {
     if (!savedAddress) {
         throw new apiError(404, "Address not found");
     }
-    if (savedAddress.userId.toString() != req.user.userId.toString()) {
+    if (savedAddress.userId.toString() != req.user._id.toString()) {
         throw new apiError(
             400,
             "Address not deleted, you can only delete your address",
         );
     }
     await userAddress.deleteOne({ _id: addressId });
-    return sendResponse(200, {}, "Address deleted successfully");
+    return sendResponse(res, 200, {}, "Address deleted successfully");
 });

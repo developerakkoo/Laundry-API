@@ -1,5 +1,7 @@
 const { Schema, model } = require("mongoose");
 
+
+
 const servicesSchema = new Schema(
     {
         name: {
@@ -35,6 +37,7 @@ const servicesSchema = new Schema(
             type: Number,
             required: true,
         },
+        quantityAcceptedIn:{},
         status: {
             type: Number,
             required: true,

@@ -7,10 +7,16 @@ const deliveryAgentModel = require("../models/deliveryAgent.model");
 
 exports.isAuthenticated = asyncHandler(async (req, res, next) => {
     let user;
-    const token = req.cookies["access-token"];
+    const token =
+        req.headers["x-access-token"] || req.cookies["accessToken"];
+
+    // console.log('token',token);
+
 
     if (!token) throw new apiError(403, "Access Denied:Invalid access token");
     const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET_KEY);
+    // console.log(decoded);
+    // console.log('====================================');
     if (decoded.userType === 1) {
         user = await Admin.findById(decoded.user._id);
     }

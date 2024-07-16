@@ -5,14 +5,15 @@ const {
     deleteFile,
 } = require("../utils/helper.utils");
 
-exports.addCategory = asyncHandler(async (req, res) => {
+exports.addCategory = asyncHandler(async (req, res, next) => {
     const { name } = req.body;
     const isExistCategory = await categoryModel.findOne({ name });
     if (isExistCategory) {
         return sendResponse(res, 400, null, "Category already exist");
     }
     const category = await categoryModel.create({ name });
-    return sendResponse(res, 200, category, "Category added successfully");
+    req.body.categoryId = category._id;
+    next();
 });
 
 exports.getCategoryById = asyncHandler(async (req, res) => {
@@ -57,17 +58,6 @@ exports.updateCategory = asyncHandler(async (req, res) => {
 
 exports.uploadCategoryImage = asyncHandler(async (req, res) => {
     const { categoryId } = req.body;
-    if (
-        req.user.adminType !== 0 ||
-        (req.user.categoryAccess !== 0 && req.user.categoryAccess !== 1)
-    ) {
-        return sendResponse(
-            res,
-            403,
-            null,
-            "You don't have permission to perform this action",
-        );
-    }
     const isExistCategory = await categoryModel.findById(categoryId);
     if (!isExistCategory) {
         return sendResponse(res, 404, null, "Category not found");
