@@ -3,6 +3,7 @@ const adminController = require("../controllers/admin.controller");
 const categoryController = require("../controllers/category.controller");
 const { isAuthenticated } = require("../middlewares/auth.middleware");
 const { multerUpload } = require("../middlewares/fileHandler.middleware");
+const promoCodeController = require("../controllers/promoCode.controller");
 const {
     getAllUser,
     getUserById,
@@ -35,6 +36,13 @@ const {
 router.post("/register", adminController.createAdmin);
 
 router.post("/login", adminController.login);
+
+/***** No admin access require routes *****/
+
+router.get("/promoCode/get-all", promoCodeController.getAllPromoCodes);
+
+/************************************************************************************************************************************************************/
+
 
 /* Authorize access only */
 router.use(isAuthenticated);
@@ -262,6 +270,21 @@ router.delete(
     "/cashback/delete/:id",
     cashbackOfferPermission,
     adminController.deleteCashbackOffer,
+);
+
+/***** Promo code routes *****/
+router.post("/promoCode/add", promoCodeController.addPromoCode);
+
+router.put(
+    "/promoCode/update/:promoCodeId",
+    promoCodeController.updatedPromoCode,
+);
+
+router.get("/promoCode/get/:promoCodeId", promoCodeController.getPromoCode);
+
+router.delete(
+    "/promoCode/delete/:promoCodeId",
+    promoCodeController.deletePromoCode,
 );
 
 /***** Dashboard Routes *****/
