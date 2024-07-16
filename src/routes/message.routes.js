@@ -1,28 +1,31 @@
 const router = require("express").Router();
 const messageController = require("../controllers/message.controller");
-const {
-    messagePermission,
-} = require("../middlewares/adminPermission.middleware");
 const { isAuthenticated } = require("../middlewares/auth.middleware");
+const { multerUpload } = require("../middlewares/fileHandler.middleware");
 
-/* Authorize access only */
 router.use(isAuthenticated);
 
-router.post("/send", messageController.sendMessage);
+router.get("/get/chat-list/:userId", messageController.getMyChatList);
 
-router.put("/:id/update/:status", messageController.updateMessageStatus);
-
-router.get("/get/all", messagePermission, messageController.getAllMessages);
-
-router.get("/get/:id", messageController.getMessageById);
-
-router.get("/get-by/userId/:userId", messageController.getMessagesByUserId);
-
-
-router.delete(
-    "/:id/delete",
-    messagePermission,
-    messageController.deleteMessage,
+router.post(
+    "/send",
+    messageController.checkChatExist,
+    messageController.sendMessage,
 );
+
+router.post(
+    "/multimedia-send",
+    multerUpload,
+    messageController.checkChatExist,
+    messageController.sendMultimediaMessage,
+);
+
+router.get("/get/:messageId", messageController.getMessageById);
+
+router.get("/get/all/:userId", messageController.getAllMessageByUserId);
+
+router.put("/markAsRead/:messageId", messageController.markAsRead);
+
+router.delete("/delete/:messageId", messageController.deleteMessageById);
 
 module.exports = { messageRoutes: router };

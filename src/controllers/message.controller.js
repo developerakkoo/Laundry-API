@@ -1,146 +1,213 @@
-const messageModel = require("../models/message.model");
-const { asyncHandler, sendResponse } = require("../utils/helper.utils");
+const Message = require("../models/message.model");
+const {
+    asyncHandler,
+    apiResponse,
+    apiError,
+    deleteFile,
+} = require("../utils/helper.utils");
+const chatModel = require("../models/chat.model");
+const { sendNotification } = require("./notification.controller");
+
+exports.getMyChatList = asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+    const { username } = req.query;
+
+    // Find chat lists involving the user
+    let chatListQuery = chatModel.find({ members: userId });
+
+    // If a username is provided, filter by username
+    if (username) {
+        chatListQuery = chatListQuery.populate({
+            path: "members",
+            match: { name: { $regex: username, $options: "i" } }, // case-insensitive search
+            select: "name profile_image isOnline",
+        });
+    } else {
+        chatListQuery = chatListQuery.populate({
+            path: "members",
+            select: "name profile_image isOnline",
+        });
+    }
+
+    const chatList = await chatListQuery.exec();
+    const dataPromises = chatList.map(async (chat) => {
+        const lastMessage = await Message.findOne({ chatId: chat._id })
+            .sort({ createdAt: -1 })
+            .exec();
+
+        return {
+            _id: chat._id,
+            members: chat.members,
+            lastMessage: lastMessage || {}, // Ensure lastMessage is not null
+        };
+    });
+
+    const data = await Promise.all(dataPromises);
+
+    return res
+        .status(200)
+        .json(
+            new apiResponse(200, data, responseMessage.GET_CHAT_LIST_SUCCESS),
+        );
+});
 
 exports.sendMessage = asyncHandler(async (req, res) => {
-    const { senderId, receiverId, message } = req.body;
-    const newMessage = await messageModel.create({
+    const { chatId, senderId, receiverId, message, orderId } = req.body;
+    const newMessage = await Message.create({
         senderId,
+        orderId,
         receiverId,
         message,
+        chatId,
     });
-    return sendResponse(res, 200, newMessage, "Message sent successfully");
+    sendNotification(receiverId, "New Message", newMessage);
+    return res
+        .status(201)
+        .json(new apiResponse(201, newMessage, responseMessage.Message_SENT));
 });
 
-exports.getMessagesByUserId = asyncHandler(async (req, res) => {
-    const { search } = req.query;
-    const pageNumber = parseInt(req.query.page) || 1;
-    const pageSize = parseInt(req.query.pageSize) || 10;
-    const skip = (pageNumber - 1) * pageSize;
-    const userId = req.params.userId;
+exports.sendMultimediaMessage = asyncHandler(async (req, res) => {
+    // console.log("hree>>>>>>>>>>>>>> media");
+    const { chatId, senderId, receiverId, orderId } = req.body;
+    const { filename } = req.file;
+    const local_filePath = `upload/${filename}`;
+    let image_url = `https://${req.hostname}/uploads/${filename}`;
+    if (process.env.NODE_ENV !== "production") {
+        image_url = `https://${req.hostname}:8000/uploads/${filename}`;
+    }
 
-    let dbQuery = {
-        $or: [{ senderId: userId }, { receiverId: userId }],
+    const data = {
+        chatId,
+        orderId,
+        senderId,
+        receiverId,
+        isImage: true,
+        image_url,
+        local_filePath,
     };
+    // console.log(data);
+    const newMessage = await Message.create(data);
+    sendNotification(receiverId, "New Message", newMessage);
 
-    // If search query is provided
-    if (search) {
-        const searchRegex = new RegExp(search.trim(), "i");
-        dbQuery.$and = [
-            { $or: [{ senderId: userId }, { receiverId: userId }] },
-            { message: { $regex: searchRegex } },
-        ];
-    }
-    const dataCount = await messageModel.countDocuments(dbQuery);
-    const messages = await messageModel
-        .find(dbQuery)
-        .skip(skip)
-        .limit(pageSize)
-        .sort({ createdAt: -1 });
-
-    const startItem = skip + 1;
-    const endItem = Math.min(
-        startItem + pageSize - 1,
-        startItem + messages.length - 1,
-    );
-    const totalPages = Math.ceil(dataCount / pageSize);
-
-    if (messages.length === 0) {
-        return sendResponse(res, 404, null, "Message not found");
-    }
-    return sendResponse(
-        res,
-        200,
-        {
-            content: messages,
-            startItem,
-            endItem,
-            totalPages,
-            pagesize: messages.length,
-            totalDoc: dataCount,
-        },
-        "Message fetched successfully",
-    );
+    return res
+        .status(201)
+        .json(new apiResponse(201, newMessage, responseMessage.Message_SENT));
 });
 
-exports.getAllMessages = asyncHandler(async (req, res) => {
-    let dbQuery = {};
-    const { search, status } = req.query;
-    const pageNumber = parseInt(req.query.page) || 1;
-    const pageSize = parseInt(req.query.pageSize) || 10;
-    const skip = (pageNumber - 1) * pageSize;
+exports.checkChatExist = asyncHandler(async (req, res, next) => {
+    const { senderId, receiverId } = req.body;
 
-    // Search based on user query
-    if (search) {
-        const searchRegex = new RegExp(search.trim(), "i");
-        dbQuery.$or = [
-            { message: { $regex: searchRegex } },
-            { message: { $regex: searchRegex } },
-        ];
-    }
-    // Sort by status
-    if (status) {
-        dbQuery.status = Number(status);
-    }
-    const dataCount = await messageModel.countDocuments(dbQuery);
-    const messages = await messageModel
-        .find(dbQuery)
-        .skip(skip)
-        .limit(pageSize)
-        .sort({ createdAt: -1 });
+    // Check if a chat exists with both senderId and receiverId in any order and exactly two members
+    let chat = await chatModel.findOne({
+        $and: [
+            { members: { $all: [senderId, receiverId] } },
+            { members: { $size: 2 } },
+        ],
+    });
 
-    const startItem = skip + 1;
-    const endItem = Math.min(
-        startItem + pageSize - 1,
-        startItem + messages.length - 1,
-    );
-    const totalPages = Math.ceil(dataCount / pageSize);
-    if (messages.length === 0) {
-        return sendResponse(res, 404, null, "Message not found");
+    if (!chat) {
+        chat = await chatModel.create({ members: [senderId, receiverId] });
+        // return this.sendMessage(req, res);
     }
-    return sendResponse(
-        res,
-        200,
-        {
-            content: messages,
-            startItem,
-            endItem,
-            totalPages,
-            pagesize: messages.length,
-            totalDoc: dataCount,
-        },
-        "Message fetched successfully",
-    );
+
+    // If no chat exists, create a new one
+    req.body.chatId = chat._id;
+    next();
 });
 
 exports.getMessageById = asyncHandler(async (req, res) => {
-    const message = await messageModel.findById(req.params.id);
-    if (!message) {
-        return sendResponse(res, 404, null, "Message not found");
+    const { MessageId } = req.params;
+    const Message = await Message.findById(MessageId);
+    if (!Message) {
+        throw new ApiError(404, responseMessage.Message_NOT_FOUND);
     }
-    return sendResponse(res, 200, message, "Message fetched successfully");
+    return res
+        .status(200)
+        .json(
+            new apiResponse(
+                200,
+                Message,
+                responseMessage.Message_FETCHED_SUCCESSFULLY,
+            ),
+        );
 });
 
-exports.updateMessageStatus = asyncHandler(async (req, res) => {
-    const message = await messageModel.findByIdAndUpdate(
-        req.params.id,
-        { status: req.params.status },
+exports.getAllMessageByUserId = asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+    const { orderId } = req.query;
+    // Build the query to find messages based on orderId and userId
+    const query = {
+        $or: [{ senderId: userId }, { receiverId: userId }],
+    };
+    if (orderId) {
+        query.orderId = orderId; // Add orderId filter if provided
+    }
+    const Messages = await Message.find(query).sort({ createdAt: 1 });
+    if (!Messages) {
+        throw new ApiError(404, responseMessage.Message_NOT_FOUND);
+    }
+    return res
+        .status(200)
+        .json(
+            new apiResponse(
+                200,
+                Messages,
+                responseMessage.Message_FETCHED_SUCCESSFULLY,
+            ),
+        );
+});
+
+exports.markAsRead = asyncHandler(async (req, res) => {
+    const { MessageId } = req.params;
+    const Message = await Message.findById(MessageId);
+    if (!Message) {
+        throw new ApiError(404, responseMessage.Message_NOT_FOUND);
+    }
+    const updatedMessage = await Message.findByIdAndUpdate(
+        MessageId,
+        { $set: { read: true } },
         { new: true },
     );
-    if (!message) {
-        return sendResponse(res, 404, null, "Message not found");
-    }
-    return sendResponse(
-        res,
-        200,
-        message,
-        "Message status updated successfully",
-    );
+    return res
+        .status(200)
+        .json(
+            new apiResponse(
+                200,
+                updatedMessage,
+                responseMessage.Message_MARKED_AS_READ_SUCCESSFULLY,
+            ),
+        );
 });
 
-exports.deleteMessage = asyncHandler(async (req, res) => {
-    const message = await messageModel.findByIdAndDelete(req.params.id);
-    if (!message) {
-        return sendResponse(res, 404, null, "Message not found");
+exports.deleteMessageById = asyncHandler(async (req, res) => {
+    const { MessageId } = req.params;
+    const Message = await Message.findById(MessageId);
+    if (!Message) {
+        throw new ApiError(404, responseMessage.Message_NOT_FOUND);
     }
-    return sendResponse(res, 200, message._id, "Message deleted successfully");
+    if (Message.isImage === true) {
+        deleteFile(Message.local_filePath);
+    }
+    await Message.deleteOne();
+    return res
+        .status(200)
+        .json(
+            new apiResponse(
+                200,
+                null,
+                responseMessage.Message_DELETED_SUCCESSFULLY,
+            ),
+        );
+});
+
+exports.getMessageByChatId = asyncHandler(async (req, res) => {
+    const { chatId } = req.params;
+
+    const messages = await Message.find({ chatId }).sort({ createdAt: 1 });
+    if (!messages) {
+        throw new ApiError(404, "MESSAGE_NOT_FOUND");
+    }
+    return res
+        .status(200)
+        .json(new apiResponse(200, messages, "MESSAGE_FETCHED_SUCCESSFULLY"));
 });
