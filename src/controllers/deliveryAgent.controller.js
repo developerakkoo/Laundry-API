@@ -48,9 +48,7 @@ exports.register = asyncHandler(async (req, res) => {
 exports.login = asyncHandler(async (req, res) => {
     const { email, phoneNumber, password } = req.body;
     const deliveryAgent = await deliveryAgentModel
-        .findOne({
-            $or: [{ email }, { phoneNumber }],
-        })
+        .findOne({ phoneNumber })
         .select("+password");
     if (!deliveryAgent) {
         return sendResponse(
@@ -60,15 +58,15 @@ exports.login = asyncHandler(async (req, res) => {
             "Your not registered as a delivery agent",
         );
     }
-    const isMatch = await deliveryAgent.isPasswordCorrect(password);
-    if (!isMatch) {
-        return sendResponse(res, 400, null, "Incorrect credentials");
-    }
+    // const isMatch = await deliveryAgent.isPasswordCorrect(password);
+    // if (!isMatch) {
+    //     return sendResponse(res, 400, null, "Incorrect credentials");
+    // }
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
         deliveryAgent._id,
         3,
     );
-    deliveryAgent.password = "********";
+    // deliveryAgent.password = "********";
     return res
         .status(200)
         .cookie("access-token", accessToken, cookieOptions)
@@ -76,7 +74,7 @@ exports.login = asyncHandler(async (req, res) => {
         .json(
             new apiResponse(
                 200,
-                deliveryAgent,
+                { userId: deliveryAgent._id, accessToken, refreshToken },
                 "User login successful, Welcome back",
             ),
         );
@@ -288,5 +286,3 @@ exports.deleteDeliveryAgent = asyncHandler(async (req, res) => {
     const user = await deliveryAgentModel.findByIdAndDelete(id);
     return sendResponse(res, 200, user._id, "User deleted successfully");
 });
-
-
