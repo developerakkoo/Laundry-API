@@ -43,7 +43,6 @@ router.get("/promoCode/get-all", promoCodeController.getAllPromoCodes);
 
 /************************************************************************************************************************************************************/
 
-
 /* Authorize access only */
 router.use(isAuthenticated);
 
@@ -295,5 +294,13 @@ router.get(
     "/dashboard/totalRevenue/chart",
     adminController.totalRevenueChartData,
 );
+
+/* DATA */
+
+router.post("/add/data", adminController.createData);
+
+router.get("/get/data", adminController.getData);
+
+router.put("/update/data/:id", adminController.updateData);
 
 module.exports = { adminRoutes: router };

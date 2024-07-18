@@ -170,11 +170,41 @@ const deleteFile = (filePath) => {
     fs.unlink(filePath, (err) => console.log(err));
 };
 
+/**
+ * Creates a regular expression for searching based on the provided query.
+ *
+ * @param {string} query - The search query string.
+ * @return {RegExp} - The constructed regular expression for the search query.
+ * Example usage:
+ * Replace 'search' with your search query string
+ * const searchRegex = createSearchRegex(search);
+ */
+function createSearchRegex(query) {
+    // Trim leading and trailing whitespace from the query string
+    const trimmedQuery = query.trim();
+
+    // Check if the trimmed query contains any spaces, indicating multiple words
+    if (trimmedQuery.includes(" ")) {
+        // Split the query into individual words
+        const words = trimmedQuery
+            .split(" ") // Split the query string by spaces
+            .map((word) => `\\b${word}\\b`) // Add word boundary anchors to each word
+            .join("|"); // Join the words with the OR operator '|'
+
+        // Create a case-insensitive regular expression to match any of the words
+        return new RegExp(words, "i");
+    } else {
+        // If the query is a single word or phrase, create a case-insensitive regex for it
+        return new RegExp(trimmedQuery, "i");
+    }
+}
+
 module.exports = {
     apiError,
     apiResponse,
     asyncHandler,
-    generateAccessAndRefreshTokens,
+    createSearchRegex,
     sendResponse,
     deleteFile,
+    generateAccessAndRefreshTokens,
 };

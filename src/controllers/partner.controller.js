@@ -7,6 +7,7 @@ const {
     generateAccessAndRefreshTokens,
     apiResponse,
     deleteFile,
+    createSearchRegex,
 } = require("../utils/helper.utils");
 const { cookieOptions } = require("../constant");
 
@@ -37,8 +38,8 @@ exports.registerUser = asyncHandler(async (req, res) => {
 });
 
 exports.login = asyncHandler(async (req, res) => {
-    const { email, password } = req.body;
-    const user = await partnerModel.findOne({ email }).select("+password");
+    const { phoneNumber } = req.body;
+    const user = await partnerModel.findOne({ phoneNumber }); //.select("+password");
     if (!user) {
         return sendResponse(res, 404, null, "User not found");
     }
@@ -183,7 +184,7 @@ exports.getAllPartner = asyncHandler(async (req, res) => {
 
     // Search based on user query
     if (search) {
-        const searchRegex = new RegExp(search.trim(), "i");
+        const searchRegex = createSearchRegex(search);
         dbQuery.$or = [
             { name: { $regex: searchRegex } },
             { name: { $regex: searchRegex } },
@@ -218,18 +219,22 @@ exports.getAllPartner = asyncHandler(async (req, res) => {
 
 /***** Shope *****/
 exports.createShope = asyncHandler(async (req, res) => {
-    const { name, address, partnerId } = req.body;
+    const { name, address, partnerId, lng, lat } = req.body;
     const partner = await partnerModel.findById(partnerId);
     if (!partner) {
         return sendResponse(res, 404, null, "User not found");
     }
     const shopeExistWithName = await shopeModel.findOne({ name });
     if (shopeExistWithName) {
-        return sendResponse(res, 404, null, "Shope already exists");
+        return sendResponse(res, 404, null, "Shope already exists this name");
     }
     const shope = await shopeModel.create({
         name,
         address,
+        location: {
+            type: "Point",
+            coordinates: [lng, lat],
+        },
         partnerId,
     });
     return sendResponse(res, 201, shope, "Shope created successfully");
@@ -303,7 +308,7 @@ exports.getAllShope = asyncHandler(async (req, res) => {
     const skip = (pageNumber - 1) * pageSize;
     // Search based on user query
     if (search) {
-        const searchRegex = new RegExp(search.trim(), "i");
+        const searchRegex = createSearchRegex(search);
         dbQuery.$or = [
             { name: { $regex: searchRegex } },
             { name: { $regex: searchRegex } },
@@ -365,7 +370,16 @@ exports.deleteShopeById = asyncHandler(async (req, res) => {
 /***** service *****/
 
 exports.createService = asyncHandler(async (req, res) => {
-    const { categoryId, shopeId, name, type, description, price } = req.body;
+    const {
+        categoryId,
+        shopeId,
+        name,
+        type,
+        description,
+        perKgPrice,
+        perPeacePrice,
+        quantityAcceptedIn,
+    } = req.body;
     const shope = await shopeModel.findById(shopeId);
     if (!shope) {
         return sendResponse(res, 404, null, "Shope not found");
@@ -376,7 +390,9 @@ exports.createService = asyncHandler(async (req, res) => {
         name,
         type,
         description,
-        price,
+        perKgPrice,
+        perPeacePrice,
+        quantityAcceptedIn,
     });
     return sendResponse(res, 201, service, "Service created successfully");
 });
@@ -395,7 +411,7 @@ exports.uploadServiceImage = asyncHandler(async (req, res) => {
     }
     if (isExistService.relativePath) deleteFile(isExistService?.relativePath);
 
-    const user = await servicesModel.findByIdAndUpdate(
+    const service = await servicesModel.findByIdAndUpdate(
         serviceId,
         {
             $set: {
@@ -407,7 +423,12 @@ exports.uploadServiceImage = asyncHandler(async (req, res) => {
             new: true,
         },
     );
-    return sendResponse(res, 200, user, "Service image updated successfully");
+    return sendResponse(
+        res,
+        200,
+        service,
+        "Service image updated successfully",
+    );
 });
 
 exports.updateService = asyncHandler(async (req, res) => {
@@ -527,7 +548,14 @@ exports.getAllServiceByCategoryId = asyncHandler(async (req, res) => {
 });
 
 exports.getAllServices = asyncHandler(async (req, res) => {
-    const { search, categoryId, lowerPrice, upperPrice } = req.query;
+    const {
+        search,
+        categoryId,
+        shopeId,
+        lowerPrice,
+        upperPrice,
+        quantityAcceptedIn,
+    } = req.query;
     const pageNumber = parseInt(req.query.page) || 1;
     const pageSize = parseInt(req.query.pageSize) || 10;
     const skip = (pageNumber - 1) * pageSize;
@@ -535,7 +563,7 @@ exports.getAllServices = asyncHandler(async (req, res) => {
 
     // Search based on user query
     if (search) {
-        const searchRegex = new RegExp(search.trim(), "i");
+        const searchRegex = createSearchRegex(search);
         dbQuery.$or = [
             { name: { $regex: searchRegex } },
             { name: { $regex: searchRegex } },
@@ -560,6 +588,16 @@ exports.getAllServices = asyncHandler(async (req, res) => {
             $gte: lowerPrice,
             $lte: upperPrice,
         };
+    }
+
+    // filter based on shopId
+    if (shopeId) {
+        dbQuery.shopeId = shopeId;
+    }
+
+    // filter based on quantityAcceptedIn
+    if (quantityAcceptedIn) {
+        dbQuery.quantityAcceptedIn = quantityAcceptedIn;
     }
 
     const dataCount = await servicesModel.countDocuments(dbQuery);

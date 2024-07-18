@@ -8,6 +8,10 @@ const cartSchema = new Schema(
             ref: "User",
             required: true,
         },
+        shopId: {
+            type: Schema.Types.ObjectId,
+            ref: "Shope",
+        },
         products: [
             {
                 serviceId: {
@@ -18,12 +22,13 @@ const cartSchema = new Schema(
                     type: Number,
                     default: 1,
                 },
-                shopId: {
-                    type: Schema.Types.ObjectId,
-                    ref: "Shope",
-                },
             },
         ],
+        selectedQuantityType: {
+            type: String,
+            enum: [0, 1], // 0 = "peace", 1 = "kg"
+            default: 0,
+        },
         totalPrice: {
             type: Number,
             required: true,

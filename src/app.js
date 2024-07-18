@@ -83,7 +83,7 @@ app.use(`${BASE_URL}/notification`, notificationRoutes);
 
 app.use(
     "/uploads",
-    isAuthenticated,
+    // isAuthenticated,
     express.static(path.join(__dirname, "uploads")),
 );
 

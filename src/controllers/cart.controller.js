@@ -3,32 +3,70 @@ const serviceModel = require("../models/services.model");
 const { asyncHandler, sendResponse } = require("../utils/helper.utils");
 
 // Add item to cart
+// Add item to cart
 exports.addToCart = asyncHandler(async (req, res) => {
-    const { userId, serviceId, shopId, quantity } = req.body;
+    const { userId, serviceId, shopId, quantity, selectedQuantityType } =
+        req.body;
 
+    // Find the user's cart
     let cart = await Cart.findOne({ userId });
 
+    // If the cart does not exist, create a new one
     if (!cart) {
         cart = new Cart({ userId, products: [], totalPrice: 0 });
     }
 
+    // Find the service being added
+    const service = await serviceModel.findById(serviceId);
+
+    // Check if the service exists
+    if (!service) {
+        return sendResponse(res, 404, null, "Service not found");
+    }
+
+    // Check if the user's selected quantity type is valid for the service
+    if (
+        (selectedQuantityType === 0 && service.quantityAcceptedIn === 1) ||
+        (selectedQuantityType === 1 && service.quantityAcceptedIn === 0)
+    ) {
+        return sendResponse(
+            res,
+            400,
+            null,
+            "Selected quantity type is not available for this service",
+        );
+    }
+
+    // Find the product in the cart, if it already exists
     const productIndex = cart.products.findIndex(
         (product) =>
             product.serviceId.toString() === serviceId &&
             product.shopId.toString() === shopId,
     );
 
+    // Update quantity if the product already exists in the cart
     if (productIndex > -1) {
         cart.products[productIndex].quantity += quantity;
     } else {
-        cart.products.push({ serviceId, shopId, quantity });
+        // Add new product to the cart
+        cart.products.push({
+            serviceId,
+            shopId,
+            quantity,
+            selectedQuantityType,
+        });
     }
 
-    const service = await serviceModel.findById(serviceId);
+    // Update the total price based on the selected quantity type
+    if (selectedQuantityType === 0) {
+        // per piece
+        cart.totalPrice += quantity * service.perPeacePrice;
+    }
 
-    cart.totalPrice += quantity * service.price;
+    // Save the cart
     await cart.save();
 
+    // Send response back to the client
     return sendResponse(res, 200, cart, "Item added to cart");
 });
 
@@ -61,7 +99,12 @@ exports.removeFromCart = asyncHandler(async (req, res) => {
             await cart.save();
             return sendResponse(res, 200, cart, "Item removed from cart");
         } else {
-            return sendResponse(res, 400, null, "Insufficient quantity in cart");
+            return sendResponse(
+                res,
+                400,
+                null,
+                "Insufficient quantity in cart",
+            );
         }
     } else {
         return sendResponse(res, 404, null, "Item not found in cart");

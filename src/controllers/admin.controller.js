@@ -12,6 +12,7 @@ const {
     apiResponse,
 } = require("../utils/helper.utils");
 const userModel = require("../models/user.model");
+const Data = require("../models/data.model");
 const deliveryAgentModel = require("../models/deliveryAgent.model");
 
 exports.createAdmin = asyncHandler(async (req, res) => {
@@ -286,4 +287,42 @@ exports.totalRevenueChartData = asyncHandler(async (req, res) => {
         totalRevenue,
         "Total revenue fetched successfully",
     );
+});
+
+/***** Data *****/
+exports.createData = asyncHandler(async (req, res) => {
+    const { gstPercentage, deliveryCharges, platformFee } = req.body;
+
+    const data = await Data.create({
+        gstPercentage,
+        deliveryCharges,
+        platformFee,
+    });
+    sendResponse(res, 200, data, "Data created successfully");
+});
+
+exports.getData = asyncHandler(async (req, res) => {
+    const data = await Data.find();
+    if (!data) {
+        return sendResponse(404, null, "Data not found");
+    }
+    sendResponse(res, 200, data, "Data fetched successfully");
+});
+
+exports.updateData = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const { gstPercentage, deliveryCharges, platformFee } = req.body;
+    const data = await Data.findByIdAndUpdate(
+        id,
+        {
+            gstPercentage,
+            deliveryCharges,
+            platformFee,
+        },
+        { new: true },
+    );
+    if (!data) {
+        return sendResponse(res, 404, null, "Data not found");
+    }
+    sendResponse(res, 200, data, "Data updated successfully");
 });

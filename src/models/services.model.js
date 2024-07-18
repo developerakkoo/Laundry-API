@@ -1,7 +1,5 @@
 const { Schema, model } = require("mongoose");
 
-
-
 const servicesSchema = new Schema(
     {
         name: {
@@ -33,11 +31,19 @@ const servicesSchema = new Schema(
         relativePath: {
             type: String,
         },
-        price: {
+        perPeacePrice: {
             type: Number,
             required: true,
         },
-        quantityAcceptedIn:{},
+        perKgPrice: {
+            type: Number,
+        },
+        quantityAcceptedIn: {
+            type: Number,
+            required: true,
+            default: 0,
+            enum: [0, 1, 2], // per peace only , kg only, both
+        },
         status: {
             type: Number,
             required: true,

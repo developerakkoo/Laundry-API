@@ -14,17 +14,17 @@ const orderSchema = new Schema(
         },
         items: [
             {
-                item:{
+                item: {
                     type: Schema.Types.ObjectId,
                     ref: "Service",
                 },
-                quantity: Number
+                quantity: Number,
             },
         ],
-        pickupAddress: {
+        pickupAddress: {//id
             type: String,
         },
-        dropoffAddress: {
+        dropoffAddress: {//id
             type: String,
         },
         pickupTime: {
@@ -37,6 +37,7 @@ const orderSchema = new Schema(
             type: String,
             enum: [
                 "Pending",
+                "Confirm",
                 "Picked-Up",
                 "In-Process",
                 "Ready-for-Dropoff",
@@ -46,7 +47,32 @@ const orderSchema = new Schema(
             ],
             default: "Pending",
         },
-        deliveryBoyId: {
+        orderTimeline: {
+            type: [
+                {
+                    title: String,
+                    dateTime: String,
+                    status: String,
+                },
+            ],
+        },
+        pickupOtp: {
+            type: Number,
+        },
+        dropOtp: {
+            type: Number,
+        },
+        pickupOtpVerifyStatus: {
+            type: Boolean,
+        },
+        deliveryOtpVerifyStatus: {
+            type: Boolean,
+        },
+        orderPickupAgentId: {
+            type: Schema.Types.ObjectId,
+            ref: "DeliveryBoy",
+        },
+        orderDeliveryAgentId: {
             type: Schema.Types.ObjectId,
             ref: "DeliveryBoy",
         },
@@ -54,9 +80,39 @@ const orderSchema = new Schema(
             type: Boolean,
             default: false,
         },
-        totalAmount: {
-            type: Number,
-            required: true,
+        promoCode: {
+            type: Schema.Types.ObjectId,
+            ref: "PromoCode",
+        },
+        priceDetails: {
+            subtotal: {
+                type: Number,
+                required: true,
+            },
+            gstAmount: {
+                type: Number,
+                required: true,
+            },
+            deliveryCharges: {
+                type: Number,
+                required: true,
+            },
+            deliveryBoyCompensation: {
+                type: Number,
+                required: true,
+            },
+            platformFee: {
+                type: Number,
+                required: true,
+            },
+            discount: {
+                type: Number,
+                required: true,
+            },
+            totalAmountToPay: {
+                type: Number,
+                required: true,
+            },
         },
         cashbackPoints: {
             type: Number,
