@@ -1,5 +1,7 @@
 const deliveryAgentModel = require("../models/deliveryAgent.model");
 const deliveryAgentDocumentModel = require("../models/deliveryAgentDocument.model");
+const deliveryAgentRating = require("../models/deliveryAgentRating.model");
+const { ObjectId } = require("mongoose").Types;
 const { cookieOptions } = require("../constant");
 const {
     asyncHandler,
@@ -285,4 +287,41 @@ exports.deleteDeliveryAgent = asyncHandler(async (req, res) => {
     deleteFile(isExistUser?.relativePath);
     const user = await deliveryAgentModel.findByIdAndDelete(id);
     return sendResponse(res, 200, user._id, "User deleted successfully");
+});
+
+exports.addRattingToDeliveryAgent = asyncHandler(async (req, res) => {
+    const { deliveryAgentId, userId, rating, description } = req.body;
+    const isExistUser = await deliveryAgentRating.findOne({
+        userId,
+        deliveryAgentId,
+    });
+
+    if (isExistUser)
+        return sendResponse(res, 400, null, "Rating already added");
+    const ratting = await deliveryAgentRating.create({
+        deliveryAgentId,
+        userId,
+        rating,
+        description,
+    });
+    return sendResponse(res, 200, ratting, "Ratting added successfully");
+});
+
+// Function to get the average rating for a delivery agent
+exports.getAverageRating = asyncHandler(async (deliveryAgentId) => {
+    const result = await deliveryAgentRating.aggregate([
+        {
+            $match: {
+                deliveryAgentId: new ObjectId(deliveryAgentId),
+            },
+        },
+        {
+            $group: {
+                _id: "$deliveryAgentId",
+                averageRating: { $avg: "$star" },
+            },
+        },
+    ]);
+    const data = result.length > 0 ? result[0].averageRating : 0;
+    sendResponse(res, 200, data, "Average rating calculated successfully.");
 });

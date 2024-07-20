@@ -1,6 +1,6 @@
 const { Schema, model } = require("mongoose");
 
-const DeliveryBoyRatingSchema = new Schema(
+const DeliveryAgentRatingSchema = new Schema(
     {
         deliveryAgentId: {
             type: Schema.Types.ObjectId,
@@ -24,4 +24,4 @@ const DeliveryBoyRatingSchema = new Schema(
     { timestamps: true },
 );
 
-module.exports = model("deliveryAgentRating", DeliveryBoyRatingSchema);
+module.exports = model("deliveryAgentRating", DeliveryAgentRatingSchema);

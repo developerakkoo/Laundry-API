@@ -219,7 +219,7 @@ exports.getAllPartner = asyncHandler(async (req, res) => {
 
 /***** Shope *****/
 exports.createShope = asyncHandler(async (req, res) => {
-    const { name, address, partnerId, lng, lat } = req.body;
+    const { name, address, partnerId, category, lng, lat } = req.body;
     const partner = await partnerModel.findById(partnerId);
     if (!partner) {
         return sendResponse(res, 404, null, "User not found");
@@ -231,6 +231,7 @@ exports.createShope = asyncHandler(async (req, res) => {
     const shope = await shopeModel.create({
         name,
         address,
+        category,
         location: {
             type: "Point",
             coordinates: [lng, lat],

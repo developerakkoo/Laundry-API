@@ -22,8 +22,8 @@ const SubscriptionPlanSchema = new Schema(
             type: Number,
             required: true,
         },
-        duration: {
-            type: String, // Duration in days using moment
+        validity: {
+            type: Number, // Duration in month  using moment
             required: true,
         },
         features: {
@@ -34,4 +34,4 @@ const SubscriptionPlanSchema = new Schema(
     { timestamps: true },
 );
 
-module.exports = mongoose.model("SubscriptionPlan", SubscriptionPlanSchema);
+module.exports = model("SubscriptionPlan", SubscriptionPlanSchema);

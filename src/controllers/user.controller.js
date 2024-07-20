@@ -104,47 +104,152 @@ exports.updateUser = asyncHandler(async (req, res) => {
     }
     return sendResponse(res, 200, user, "User updated successfully");
 });
-
 exports.getCurrentUser = asyncHandler(async (req, res) => {
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.user._id).lean();
     if (!user) {
         return sendResponse(res, 404, null, "User not found");
     }
+    // Populate the active subscriptions
+    const subscriptions = await userSubscription
+        .findOne({
+            userId: new ObjectId(user._id),
+            status: true,
+        })
+        .select("-userId -updatedAt -__v")
+        .populate({
+            path: "subscriptionPlanId",
+            select: "-createdAt -updatedAt -__v",
+        })
+        .lean();
+
+    // Attach active subscriptions to the user profile
+    user.activeSubscriptions = subscriptions;
     return sendResponse(res, 200, user, "User fetched successfully");
 });
 
 exports.getUserById = asyncHandler(async (req, res) => {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(req.params.id).lean();
     if (!user) {
         return sendResponse(res, 404, null, "User not found");
     }
+    // Populate the active subscriptions
+    const subscriptions = await userSubscription
+        .findOne({
+            userId: new ObjectId(user._id),
+            status: true,
+        })
+        .select("-userId -updatedAt -__v")
+        .populate({
+            path: "subscriptionPlanId",
+            select: "-createdAt -updatedAt -__v",
+        })
+        .lean();
+
+    // Attach active subscriptions to the user profile
+    user.activeSubscriptions = subscriptions;
     return sendResponse(res, 200, user, "User fetched successfully");
 });
 
 exports.getAllUser = asyncHandler(async (req, res) => {
     let dbQuery = {};
-    const { search } = req.query;
+    const { search, sub } = req.query;
     const pageNumber = parseInt(req.query.page) || 1;
     const pageSize = parseInt(req.query.pageSize) || 10;
     const skip = (pageNumber - 1) * pageSize;
+
     // Search based on user query
     if (search) {
+        const searchRegex = createSearchRegex(search);
         dbQuery = {
-            $or: [{ name: { $regex: `^${search}`, $options: "i" } }],
+            $or: [{ name: searchRegex }, { name: searchRegex }],
         };
     }
 
-    const dataCount = await User.countDocuments();
-    const user = await User.find(dbQuery).skip(skip).limit(pageSize);
+    // Aggregate pipeline
+    let userAggregation = [
+        {
+            $match: dbQuery,
+        },
+        {
+            $lookup: {
+                as: "userSubscriptionDetails",
+                from: "usersubscriptions",
+                foreignField: "userId",
+                localField: "_id",
+            },
+        },
+        {
+            $addFields: {
+                isSubscribed: {
+                    $cond: {
+                        if: { $gt: [{ $size: "$userSubscriptionDetails" }, 0] },
+                        then: true,
+                        else: false,
+                    },
+                },
+            },
+        },
+        {
+            $match: sub === "1" ? { isSubscribed: true } : {}, // Filter by subscription status if sub=1
+        },
+        {
+            $project: { password: 0, refreshToken: 0 }, // Exclude password and refreshToken fields from the result
+        },
+        {
+            $skip: skip,
+        },
+        {
+            $limit: pageSize,
+        },
+    ];
+
+    const user = await User.aggregate(userAggregation);
+    // Count documents matching the filter
+    const countAggregation = [
+        {
+            $match: dbQuery,
+        },
+        {
+            $lookup: {
+                as: "userSubscriptionDetails",
+                from: "usersubscriptions",
+                foreignField: "userId",
+                localField: "_id",
+            },
+        },
+        {
+            $addFields: {
+                isSubscribed: {
+                    $cond: {
+                        if: { $gt: [{ $size: "$userSubscriptionDetails" }, 0] },
+                        then: true,
+                        else: false,
+                    },
+                },
+            },
+        },
+        {
+            $match: sub === "1" ? { isSubscribed: true } : {}, // Filter by subscription status if sub=1
+        },
+        {
+            $count: "totalCount", // Count the total number of documents
+        },
+    ];
+
+    const countResult = await User.aggregate(countAggregation);
+    const dataCount = countResult[0] ? countResult[0].totalCount : 0;
+
     const startItem = skip + 1;
     const endItem = Math.min(
         startItem + pageSize - 1,
         startItem + user.length - 1,
     );
     const totalPages = Math.ceil(dataCount / pageSize);
+
     if (user.length === 0) {
         return sendResponse(res, 404, null, "User not found");
     }
+
     return sendResponse(
         res,
         200,

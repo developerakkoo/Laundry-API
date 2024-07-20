@@ -16,7 +16,11 @@ const UserSubscriptionSchema = new Schema(
             type: String,
             require: true,
         },
-        isActive: {
+        paymentDetails: {
+            type: String,
+            required: true,
+        },
+        status: {
             type: Boolean,
             default: true,
         },

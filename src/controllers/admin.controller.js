@@ -5,6 +5,7 @@ const servicesModel = require("../models/services.model");
 const partnerModel = require("../models/partner.model");
 const orderModel = require("../models/order.model");
 const shopModel = require("../models/shope.model");
+const subscriptionPlan = require("../models/subscriptionPlan.model");
 const {
     asyncHandler,
     sendResponse,
@@ -325,4 +326,143 @@ exports.updateData = asyncHandler(async (req, res) => {
         return sendResponse(res, 404, null, "Data not found");
     }
     sendResponse(res, 200, data, "Data updated successfully");
+});
+
+exports.createSubscriptionPlan = asyncHandler(async (req, res) => {
+    const { name, price, validity, features } = req.body;
+
+    const checkPlaneExist = await subscriptionPlan.find({ name });
+
+    if (checkPlaneExist.length > 0) {
+        return sendResponse(res, 400, null, "Subscription plan already exists");
+    }
+
+    const newSubscriptionPlan = await subscriptionPlan.create({
+        name,
+        price,
+        validity,
+        features,
+    });
+    sendResponse(
+        res,
+        201,
+        newSubscriptionPlan,
+        "Subscription plan created successfully",
+    );
+});
+
+exports.getAllSubscriptionPlans = asyncHandler(async (req, res) => {
+    const subscriptionPlans = await subscriptionPlan.find();
+    if (!subscriptionPlans) {
+        return sendResponse(res, 404, null, "Subscription plans not found");
+    }
+    sendResponse(
+        res,
+        200,
+        subscriptionPlans,
+        "Subscription plans fetched successfully",
+    );
+});
+
+exports.getSubscriptionPlanById = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const existSubscriptionPlan = await subscriptionPlan.findById(id);
+    if (!existSubscriptionPlan) {
+        return sendResponse(res, 404, null, "Subscription plan not found");
+    }
+    sendResponse(
+        res,
+        200,
+        existSubscriptionPlan,
+        "Subscription plan fetched successfully",
+    );
+});
+
+exports.updateSubscriptionPlan = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const { name, price, validity, features } = req.body;
+    const updatedSubscriptionPlan = await subscriptionPlan.findByIdAndUpdate(
+        id,
+        {
+            name,
+            price,
+            validity,
+            features,
+        },
+        { new: true },
+    );
+    if (!subscriptionPlan) {
+        return sendResponse(res, 404, null, "Subscription plan not found");
+    }
+    sendResponse(
+        res,
+        200,
+        updatedSubscriptionPlan,
+        "Subscription plan updated successfully",
+    );
+});
+
+// Update or delete a specific feature in a subscription plan
+exports.modifyFeatureInSubscriptionPlan = asyncHandler(async (req, res) => {
+    const { id, featureId } = req.params;
+    const { title, description, action } = req.query; // Use query parameters to determine the action
+
+    // Find the subscription plan by id
+    const subscriptionPlanExist = await subscriptionPlan.findById(id);
+
+    if (!subscriptionPlanExist) {
+        return sendResponse(res, 404, null, "Subscription plan not found");
+    }
+
+    // Find the feature by featureId
+    const feature = subscriptionPlanExist.features.id(featureId);
+
+    if (!feature) {
+        return sendResponse(res, 404, null, "Feature not found");
+    }
+
+    if (action === "update") {
+        // Update the feature fields if action is 'update'
+        if (title) feature.title = title;
+        if (description) feature.description = description;
+
+        // Save the updated subscription plan
+        await subscriptionPlanExist.save();
+
+        return sendResponse(
+            res,
+            200,
+            subscriptionPlanExist,
+            "Feature updated successfully",
+        );
+    } else if (action === "delete") {
+        // Remove the feature if action is 'delete'
+        feature.remove();
+
+        // Save the updated subscription plan
+        await subscriptionPlanExist.save();
+
+        return sendResponse(
+            res,
+            200,
+            subscriptionPlanExist,
+            "Feature deleted successfully",
+        );
+    } else {
+        return sendResponse(res, 400, null, "Invalid action");
+    }
+});
+
+exports.deleteSubscriptionPlan = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const deletedSubscriptionPlan = await subscriptionPlan.findByIdAndDelete(id);
+    if (!deletedSubscriptionPlan) {
+        return sendResponse(res, 404, null, "Subscription plan not found");
+    }
+    sendResponse(
+        res,
+        200,
+        deletedSubscriptionPlan._id,
+        "Subscription plan deleted successfully",
+    );
 });

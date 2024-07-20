@@ -6,6 +6,13 @@ const shopSchema = new Schema(
             type: String,
             required: true,
         },
+        category: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "Category",
+                required: true,
+            },
+        ],
         address: {
             addressLine1: String,
             addressLine2: String,

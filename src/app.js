@@ -54,6 +54,10 @@ app.use(
     }),
 );
 
+/*-------------------------------- Cron job --------------------------------------*/
+require("./cronJob/subscription.cron");
+/*-------------------------------------------------------------------------------*/
+
 /*Api rate limiter */
 // app.use(apiRateLimiter);
 
@@ -68,6 +72,7 @@ const { partnerRoutes } = require("./routes/partner.routes");
 const { isAuthenticated } = require("./middlewares/auth.middleware");
 const { deliveryAgentRoutes } = require("./routes/deliveryAgent.routes");
 const { notificationRoutes } = require("./routes/notification.routes");
+const { userSubscriptionRoutes } = require("./routes/subscription.routes");
 /*Api Logger */
 app.use(morganMiddleware);
 
@@ -80,6 +85,7 @@ app.use(`${BASE_URL}/partner`, partnerRoutes);
 app.use(`${BASE_URL}/ratting`, rattingRoutes);
 app.use(`${BASE_URL}/deliveryAgent`, deliveryAgentRoutes);
 app.use(`${BASE_URL}/notification`, notificationRoutes);
+app.use(`${BASE_URL}/subscription`, userSubscriptionRoutes);
 
 app.use(
     "/uploads",

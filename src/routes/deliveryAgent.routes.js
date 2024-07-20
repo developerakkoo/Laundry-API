@@ -26,4 +26,8 @@ router.get("/logout", deliveryAgentController.logout);
 
 router.get("/get-current-user", deliveryAgentController.getCurrentUser);
 
+router.post("/add/ratting", deliveryAgentController.addRattingToDeliveryAgent);
+
+router.get("/get/ratings", deliveryAgentController.getAverageRating);
+
 module.exports = { deliveryAgentRoutes: router };

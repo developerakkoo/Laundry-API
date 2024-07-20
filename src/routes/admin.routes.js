@@ -91,7 +91,7 @@ router.delete(
 );
 
 /*User routes*/
-router.get("/get-users", userPermission, getAllUser);
+router.get("/get-users", getAllUser);
 
 router.get("/get-user/:id", userPermission, getUserById);
 
@@ -302,5 +302,34 @@ router.post("/add/data", adminController.createData);
 router.get("/get/data", adminController.getData);
 
 router.put("/update/data/:id", adminController.updateData);
+
+/* Subscription Plan Routes */
+
+router.post("/subscriptionPlan/add", adminController.createSubscriptionPlan);
+
+router.get(
+    "/subscriptionPlan/get/:id",
+    adminController.getSubscriptionPlanById,
+);
+
+router.get(
+    "/subscriptionPlan/get-all",
+    adminController.getAllSubscriptionPlans,
+);
+
+router.put(
+    "/subscriptionPlan/:id/features/:featureId",
+    adminController.modifyFeatureInSubscriptionPlan,
+);
+
+router.put(
+    "/subscriptionPlan/update/:id",
+    adminController.updateSubscriptionPlan,
+);
+
+router.delete(
+    "/subscriptionPlan/delete/:id",
+    adminController.deleteSubscriptionPlan,
+);
 
 module.exports = { adminRoutes: router };

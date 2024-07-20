@@ -3,7 +3,11 @@ const Wallet = require("../models/wallet.model");
 const DeliveryBoy = require("../models/deliveryAgent.model");
 const Cart = require("../models/cart.model");
 const MasterOrder = require("../models/masterOrder.model");
-const { asyncHandler, sendResponse } = require("../utils/helper.utils");
+const {
+    asyncHandler,
+    sendResponse,
+    generateOTP,
+} = require("../utils/helper.utils");
 const {
     useWalletPoints,
     addPointsToWallet,
@@ -88,6 +92,30 @@ exports.createOrder = asyncHandler(async (req, res) => {
 
     // Send response indicating successful order creation
     sendResponse(res, 201, masterOrder, "Order created successfully");
+});
+
+// generate pickup and drop  otp
+exports.generateOtp = asyncHandler(async (req, res) => {
+    const { otpType } = req.query;
+
+    const savedOrder = await Order.findById(req.params.orderId);
+    if (!savedOrder) {
+        return sendResponse(res, 400, null, `Invalid Data`);
+    }
+    if (otpType == 0) {
+        if (savedOrder.pickupOtp != undefined) {
+            return sendResponse(res, 400, null, `Start Otp Already Generated`);
+        }
+        savedOrder.pickupOtp = generateOTP();
+    }
+    if (otpType == 1) {
+        if (savedOrder.dropOtp != undefined) {
+            return sendResponse(res, 400, null, `Stop Otp Already Generated`);
+        }
+        savedOrder.dropOtp = generateOTP();
+    }
+    const generatedOtp = await savedOrder.save();
+    sendResponse(res, 200, generatedOtp, "Otp generated successfully");
 });
 
 // Complete an order

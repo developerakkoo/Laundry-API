@@ -199,6 +199,22 @@ function createSearchRegex(query) {
     }
 }
 
+/**
+ * Generates a 4-digit random number (OTP) for authentication purposes.
+ *
+ * @function generateOTP
+ * @returns {number} A 4-digit random number between 1000 and 9999.
+ *
+ * @example
+ * const otp = generateOTP();
+ * console.log('Generated OTP:', otp); // Output: Generated OTP: 1234
+ */
+function generateOTP() {
+    // Generate a random number between 1000 and 9999
+    const otp = Math.floor(1000 + Math.random() * 9000);
+    return otp;
+}
+
 module.exports = {
     apiError,
     apiResponse,
@@ -206,5 +222,6 @@ module.exports = {
     createSearchRegex,
     sendResponse,
     deleteFile,
+    generateOTP,
     generateAccessAndRefreshTokens,
 };
