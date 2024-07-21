@@ -7,7 +7,7 @@ const userSchema = new Schema(
     {
         name: {
             type: String,
-            required: true,
+            // required: true,
         },
         phoneNumber: {
             type: String,
@@ -15,12 +15,12 @@ const userSchema = new Schema(
         },
         email: {
             type: String,
-            required: true,
-            unique: true,
+            // required: true,
+            // unique: true,
         },
         password: {
             type: String,
-            required: true,
+            // required: true,
             select: false,
         },
         refreshToken: {

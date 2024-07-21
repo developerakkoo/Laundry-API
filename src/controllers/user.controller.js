@@ -44,9 +44,11 @@ exports.registerUser = asyncHandler(async (req, res) => {
 
 exports.login = asyncHandler(async (req, res) => {
     const { phoneNumber } = req.body;
-    const user = await User.findOne({ phoneNumber });
+    let user = await User.findOne({ phoneNumber });
     if (!user) {
-        return sendResponse(res, 404, null, "User not found");
+        user = await User.create({
+            phoneNumber,
+        });
     }
     // const isMatch = await user.isPasswordCorrect(password);
     // if (!isMatch) {
@@ -64,7 +66,7 @@ exports.login = asyncHandler(async (req, res) => {
             new apiResponse(
                 200,
                 { _id: user._id, accessToken, refreshToken },
-                "User login successful, Welcome back",
+                "User login successful, Welcome to your account",
             ),
         );
 });
