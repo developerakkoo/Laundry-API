@@ -155,7 +155,9 @@ exports.uploadDocument = asyncHandler(async (req, res) => {
 });
 
 exports.getCurrentUser = asyncHandler(async (req, res) => {
-    const user = await deliveryAgentModel.findById(req.user._id);
+    const id = req.user._id || req.query.userId;
+
+    const user = await deliveryAgentModel.findById(id);
     if (!user) {
         return sendResponse(res, 404, null, "User not found");
     }

@@ -3,7 +3,7 @@ const messageController = require("../controllers/message.controller");
 const { isAuthenticated } = require("../middlewares/auth.middleware");
 const { multerUpload } = require("../middlewares/fileHandler.middleware");
 
-router.use(isAuthenticated);
+// router.use(isAuthenticated);
 
 router.get("/get/chat-list/:userId", messageController.getMyChatList);
 

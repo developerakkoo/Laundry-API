@@ -20,7 +20,7 @@ router.put(
 );
 
 /* Authorize access only */
-router.use(isAuthenticated);
+// router.use(isAuthenticated);
 
 router.get("/logout", deliveryAgentController.logout);
 

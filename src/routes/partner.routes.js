@@ -16,7 +16,7 @@ router.post(
 router.put("/update-profile", partnerController.updatePartnerById);
 
 /* Authorize access only */
-router.use(isAuthenticated);
+// router.use(isAuthenticated);
 
 router.get("/get-current-user", partnerController.getCurrentUser);
 

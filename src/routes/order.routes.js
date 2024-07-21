@@ -3,7 +3,7 @@ const orderController = require("../controllers/order.controller");
 const { isAuthenticated } = require("../middlewares/auth.middleware");
 
 /* Authorize access only */
-router.use(isAuthenticated);
+// router.use(isAuthenticated);
 
 router.post("/place", orderController.createOrder);
 

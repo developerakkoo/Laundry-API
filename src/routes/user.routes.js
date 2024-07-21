@@ -8,7 +8,7 @@ router.post("/register", userController.registerUser);
 router.post("/login", userController.login);
 
 /* Authorize access only */
-router.use(isAuthenticated);
+// router.use(isAuthenticated);
 
 router.get("/logout", userController.logout);
 

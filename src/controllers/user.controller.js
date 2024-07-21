@@ -1,5 +1,6 @@
 const User = require("../models/user.model");
 const userAddress = require("../models/userAddress.model");
+const userSubscription = require("../models/subscription.model");
 const {
     asyncHandler,
     sendResponse,
@@ -105,7 +106,8 @@ exports.updateUser = asyncHandler(async (req, res) => {
     return sendResponse(res, 200, user, "User updated successfully");
 });
 exports.getCurrentUser = asyncHandler(async (req, res) => {
-    const user = await User.findById(req.user._id).lean();
+    const id = req.user._id || req.query.userId;
+    const user = await User.findById(id).lean();
     if (!user) {
         return sendResponse(res, 404, null, "User not found");
     }

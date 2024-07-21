@@ -3,7 +3,7 @@ const rattingController = require("../controllers/ratting.controller");
 const { isAuthenticated } = require("../middlewares/auth.middleware");
 
 /* Authorize access only */
-router.use(isAuthenticated);
+// router.use(isAuthenticated);
 
 router.post("/add", rattingController.addRatting);
 

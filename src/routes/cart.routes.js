@@ -8,7 +8,7 @@ const {
 const {isAuthenticated} = require("../middlewares/auth.middleware");
 
 /* Authorize access only */
-router.use(isAuthenticated);
+// router.use(isAuthenticated);
 
 // Add item to cart
 router.post("/add", addToCart);
