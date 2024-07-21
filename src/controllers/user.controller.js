@@ -43,15 +43,15 @@ exports.registerUser = asyncHandler(async (req, res) => {
 });
 
 exports.login = asyncHandler(async (req, res) => {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email }).select("+password");
+    const { phoneNumber } = req.body;
+    const user = await User.findOne({ phoneNumber });
     if (!user) {
         return sendResponse(res, 404, null, "User not found");
     }
-    const isMatch = await user.isPasswordCorrect(password);
-    if (!isMatch) {
-        return sendResponse(res, 400, null, "Incorrect credentials");
-    }
+    // const isMatch = await user.isPasswordCorrect(password);
+    // if (!isMatch) {
+    //     return sendResponse(res, 400, null, "Incorrect credentials");
+    // }
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
         user,
         2,
