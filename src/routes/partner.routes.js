@@ -38,6 +38,8 @@ router.get("/shop/get/:id", partnerController.getShopeById);
 
 router.get("/shop/get/partnerId/:id", partnerController.getAllShopeByPartnerId);
 
+router.get("get/by/category/:id", partnerController.getShopeByCategoryId);
+
 router.get("/shop/get-all", partnerController.getAllShope);
 
 router.delete("/shop/delete/:id", partnerController.deleteShopeById);

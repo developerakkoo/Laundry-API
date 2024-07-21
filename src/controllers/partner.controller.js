@@ -361,6 +361,14 @@ exports.getShopeById = asyncHandler(async (req, res) => {
     return sendResponse(res, 200, shope, "Shope fetched successfully");
 });
 
+exports.getShopeByCategoryId = asyncHandler(async (req, res) => {
+    const shope = await shopeModel.find({ category: req.params.id });
+    if (shope.length == 0) {
+        return sendResponse(res, 404, null, "Shope not found");
+    }
+    return sendResponse(res, 200, shope, "Shope fetched successfully");
+});
+
 exports.deleteShopeById = asyncHandler(async (req, res) => {
     const shope = await shopeModel.findByIdAndDelete(req.params.id);
     if (!shope) {
