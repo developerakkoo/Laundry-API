@@ -7,6 +7,7 @@ const calculateCashbackPoints = async (totalAmount) => {
         $and: [
             { orderAmountFrom: { $lte: totalAmount } },
             { orderAmountTo: { $gte: totalAmount } },
+            { isActive: true },
         ],
     }); // get cashback percentage from db
     const cashbackPercent = data?.cashbackPercent ?? 0;

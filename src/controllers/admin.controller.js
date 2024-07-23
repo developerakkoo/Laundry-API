@@ -147,13 +147,15 @@ exports.addCashbackOffer = asyncHandler(async (req, res) => {
 });
 
 exports.updateCashbackOffer = asyncHandler(async (req, res) => {
-    const { orderAmountFrom, orderAmountTo, cashbackPercent } = req.body;
+    const { orderAmountFrom, orderAmountTo, cashbackPercent, isActive } =
+        req.body;
     const cashback = await cashbackModel.findByIdAndUpdate(
         req.params.id,
         {
             orderAmountFrom,
             orderAmountTo,
             cashbackPercent,
+            isActive,
         },
         { new: true },
     );
@@ -455,7 +457,8 @@ exports.modifyFeatureInSubscriptionPlan = asyncHandler(async (req, res) => {
 
 exports.deleteSubscriptionPlan = asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const deletedSubscriptionPlan = await subscriptionPlan.findByIdAndDelete(id);
+    const deletedSubscriptionPlan =
+        await subscriptionPlan.findByIdAndDelete(id);
     if (!deletedSubscriptionPlan) {
         return sendResponse(res, 404, null, "Subscription plan not found");
     }
