@@ -3,17 +3,20 @@ const serviceModel = require("../models/services.model");
 const { asyncHandler, sendResponse } = require("../utils/helper.utils");
 
 // Add item to cart
-// Add item to cart
 exports.addToCart = asyncHandler(async (req, res) => {
-    const { userId, serviceId, shopId, quantity, selectedQuantityType } =
-        req.body;
+    const { userId, serviceId, quantity, selectedQuantityType } = req.body;
 
     // Find the user's cart
     let cart = await Cart.findOne({ userId });
 
     // If the cart does not exist, create a new one
     if (!cart) {
-        cart = new Cart({ userId, products: [], totalPrice: 0 });
+        cart = new Cart({
+            userId,
+            products: [],
+            totalPrice: 0,
+            selectedQuantityType,
+        });
     }
 
     // Find the service being added
@@ -21,7 +24,7 @@ exports.addToCart = asyncHandler(async (req, res) => {
 
     // Check if the service exists
     if (!service) {
-        return sendResponse(res, 404, null, "Service not found");
+        return res.status(404).json({ message: "Service not found" });
     }
 
     // Check if the user's selected quantity type is valid for the service
@@ -29,19 +32,14 @@ exports.addToCart = asyncHandler(async (req, res) => {
         (selectedQuantityType === 0 && service.quantityAcceptedIn === 1) ||
         (selectedQuantityType === 1 && service.quantityAcceptedIn === 0)
     ) {
-        return sendResponse(
-            res,
-            400,
-            null,
-            "Selected quantity type is not available for this service",
-        );
+        return res.status(400).json({
+            message: "Selected quantity type is not available for this service",
+        });
     }
 
     // Find the product in the cart, if it already exists
     const productIndex = cart.products.findIndex(
-        (product) =>
-            product.serviceId.toString() === serviceId &&
-            product.shopId.toString() === shopId,
+        (product) => product.serviceId.toString() === serviceId,
     );
 
     // Update quantity if the product already exists in the cart
@@ -49,30 +47,28 @@ exports.addToCart = asyncHandler(async (req, res) => {
         cart.products[productIndex].quantity += quantity;
     } else {
         // Add new product to the cart
-        cart.products.push({
-            serviceId,
-            shopId,
-            quantity,
-            selectedQuantityType,
-        });
+        cart.products.push({ serviceId, quantity });
     }
 
     // Update the total price based on the selected quantity type
     if (selectedQuantityType === 0) {
         // per piece
         cart.totalPrice += quantity * service.perPeacePrice;
+    } else if (selectedQuantityType === 1) {
+        // per kg
+        cart.totalPrice += quantity * service.perKgPrice;
     }
 
     // Save the cart
     await cart.save();
 
     // Send response back to the client
-    return sendResponse(res, 200, cart, "Item added to cart");
+    sendResponse(res, 200, cart, "Item added to cart");
 });
 
 // Remove item from cart
 exports.removeFromCart = asyncHandler(async (req, res) => {
-    const { userId, serviceId, shopId, quantity } = req.body;
+    const { userId, serviceId, quantity } = req.body;
 
     let cart = await Cart.findOne({ userId });
 
@@ -81,16 +77,20 @@ exports.removeFromCart = asyncHandler(async (req, res) => {
     }
 
     const productIndex = cart.products.findIndex(
-        (product) =>
-            product.serviceId.toString() === serviceId &&
-            product.shopId.toString() === shopId,
+        (product) => product.serviceId.toString() === serviceId,
     );
-    const service = await serviceModel.findById(serviceId);
 
     if (productIndex > -1) {
+        const service = await serviceModel.findById(serviceId);
+
         if (cart.products[productIndex].quantity >= quantity) {
+            // Adjust quantity and price
             cart.products[productIndex].quantity -= quantity;
-            cart.totalPrice -= quantity * service.price;
+            if (cart.selectedQuantityType == 0) {
+                cart.totalPrice -= quantity * service.perPeacePrice;
+            } else if (cart.selectedQuantityType == 1) {
+                cart.totalPrice -= quantity * service.perKgPrice;
+            }
 
             if (cart.products[productIndex].quantity === 0) {
                 cart.products.splice(productIndex, 1);
@@ -111,32 +111,40 @@ exports.removeFromCart = asyncHandler(async (req, res) => {
     }
 });
 
+
+
 // Get cart items
 exports.getCart = asyncHandler(async (req, res) => {
     const { userId } = req.params;
+
     const cart = await Cart.findOne({ userId })
         .populate({
             path: "products.serviceId",
-            select: "name price description categoryId imagen_url",
+            select: "name perPeacePrice perKgPrice description categoryId image_url",
         })
         .populate({
-            path: "products.shopId",
-            select: "name address partnerId",
+            path: "shopId",
+            select: "name address",
         });
+
     if (!cart) {
-        return sendResponse(res, 404, "Cart not found");
+        return sendResponse(res, 404, null, "Cart not found");
     }
+
     sendResponse(res, 200, cart, "Cart fetched successfully");
 });
 
 // Clear cart
 exports.clearCart = asyncHandler(async (req, res) => {
     const { userId } = req.params;
+
     let cart = await Cart.findOne({ userId });
+
     if (cart) {
         cart.products = [];
         cart.totalPrice = 0;
         await cart.save();
     }
+
     sendResponse(res, 200, cart, "Cart cleared");
 });

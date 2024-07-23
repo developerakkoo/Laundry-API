@@ -11,6 +11,8 @@ const {
 } = require("../utils/helper.utils");
 const { cookieOptions } = require("../constant");
 
+
+
 exports.registerUser = asyncHandler(async (req, res) => {
     const { name, email, phoneNumber, password } = req.body;
     const isExistUser = await partnerModel.findOne({
