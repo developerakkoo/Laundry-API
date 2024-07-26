@@ -332,4 +332,12 @@ router.delete(
     adminController.deleteSubscriptionPlan,
 );
 
+/* Banner Routes */
+
+router.post("/banner/add", adminController.createBanner);
+
+router.get("/banner/get-all", adminController.getAllBanners);
+
+router.get("/banner/delete/:id", adminController.deleteBanner);
+
 module.exports = { adminRoutes: router };

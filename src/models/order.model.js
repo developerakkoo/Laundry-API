@@ -21,31 +21,36 @@ const orderSchema = new Schema(
                 quantity: Number,
             },
         ],
-        pickupAddress: {//id
+        pickupAddress: {
+            //id
             type: String,
         },
-        dropoffAddress: {//id
+        dropoffAddress: {
+            //id
             type: String,
         },
         pickupTime: {
-            type: Date,
+            type: String,
         },
         dropoffTime: {
-            type: Date,
+            type: String,
+        },
+        paymentDetails: {
+            type: String,
         },
         status: {
-            type: String,
+            type: Number,
             enum: [
-                "Pending",
-                "Confirm",
-                "Picked-Up",
-                "In-Process",
-                "Ready-for-Dropoff",
-                "Dropped-Off",
-                "Completed",
-                "Cancelled",
+                0, // "Pending",
+                1, // "Confirm",
+                2, // "Picked-Up",
+                3, // "In-Process",
+                4, // "Ready-for-Dropoff",
+                5, // "Dropped-Off",
+                6, // "Completed",
+                7, // "Cancelled",
             ],
-            default: "Pending",
+            default: 0,
         },
         orderTimeline: {
             type: [
@@ -97,15 +102,23 @@ const orderSchema = new Schema(
                 type: Number,
                 required: true,
             },
-            deliveryBoyCompensation: {
+            expressDeliveryCharges: {
                 type: Number,
                 required: true,
             },
+            // deliveryBoyCompensation: {
+            //     type: Number,
+            //     required: true,
+            // },
             platformFee: {
                 type: Number,
                 required: true,
             },
             discount: {
+                type: Number,
+                required: true,
+            },
+            walletPointsUsed: {
                 type: Number,
                 required: true,
             },

@@ -85,7 +85,7 @@ exports.logout = asyncHandler(async (req, res) => {
 });
 
 exports.updateUser = asyncHandler(async (req, res) => {
-    const { name, email, phoneNumber, address } = req.body;
+    const { name, email, phoneNumber, firebaseToken } = req.body;
     const user = await User.findByIdAndUpdate(
         req.user._id || req.query.userId,
         {
@@ -93,6 +93,7 @@ exports.updateUser = asyncHandler(async (req, res) => {
                 name,
                 email,
                 phoneNumber,
+                firebaseToken,
             },
         },
         { new: true },
@@ -288,7 +289,7 @@ exports.deleteUserById = asyncHandler(async (req, res) => {
 exports.addAddresses = asyncHandler(async (req, res) => {
     const { type, address, landmark, pinCode, selected, lng, lat } = req.body;
     const savedAddress = await userAddress.create({
-        userId: req.user._id,
+        userId: req.query.userId || req.user._id,
         type,
         address,
         landmark,

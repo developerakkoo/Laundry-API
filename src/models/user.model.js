@@ -23,6 +23,9 @@ const userSchema = new Schema(
             // required: true,
             select: false,
         },
+        firebaseToken: {
+            type: String,
+        },
         refreshToken: {
             type: String,
             default: null,

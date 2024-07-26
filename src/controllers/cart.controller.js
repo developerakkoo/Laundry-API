@@ -2,22 +2,11 @@ const Cart = require("../models/cart.model");
 const serviceModel = require("../models/services.model");
 const { asyncHandler, sendResponse } = require("../utils/helper.utils");
 
-// Add item to cart
 exports.addToCart = asyncHandler(async (req, res) => {
     const { userId, serviceId, quantity, selectedQuantityType } = req.body;
 
     // Find the user's cart
     let cart = await Cart.findOne({ userId });
-
-    // If the cart does not exist, create a new one
-    if (!cart) {
-        cart = new Cart({
-            userId,
-            products: [],
-            totalPrice: 0,
-            selectedQuantityType,
-        });
-    }
 
     // Find the service being added
     const service = await serviceModel.findById(serviceId);
@@ -25,6 +14,27 @@ exports.addToCart = asyncHandler(async (req, res) => {
     // Check if the service exists
     if (!service) {
         return res.status(404).json({ message: "Service not found" });
+    }
+
+    // If the cart does not exist, create a new one with the shopId from the service
+    if (!cart) {
+        cart = new Cart({
+            userId,
+            shopId: service.shopeId, // Set the shopId from the service
+            products: [],
+            totalPrice: 0,
+            selectedQuantityType,
+        });
+    } else {
+        // If the cart exists but no shopId, set it to the current service's shopId
+        if (!cart.shopId) {
+            cart.shopId = service.shopeId;
+        } else if (cart.shopId.toString() !== service.shopeId.toString()) {
+            // If the shopId is different, clear the cart and update the shopId
+            cart.products = [];
+            cart.totalPrice = 0;
+            cart.shopId = service.shopeId;
+        }
     }
 
     // Check if the user's selected quantity type is valid for the service
@@ -110,8 +120,6 @@ exports.removeFromCart = asyncHandler(async (req, res) => {
         return sendResponse(res, 404, null, "Item not found in cart");
     }
 });
-
-
 
 // Get cart items
 exports.getCart = asyncHandler(async (req, res) => {

@@ -55,7 +55,7 @@ app.use(
 );
 
 /*-------------------------------- Cron job --------------------------------------*/
-require("./cronJob/subscription.cron");
+require("./cron jobs/subscription.cron");
 /*-------------------------------------------------------------------------------*/
 
 /*Api rate limiter */

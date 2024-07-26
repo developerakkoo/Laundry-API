@@ -294,11 +294,17 @@ exports.totalRevenueChartData = asyncHandler(async (req, res) => {
 
 /***** Data *****/
 exports.createData = asyncHandler(async (req, res) => {
-    const { gstPercentage, deliveryCharges, platformFee } = req.body;
+    const {
+        gstPercentage,
+        deliveryCharges,
+        expressDeliveryCharges,
+        platformFee,
+    } = req.body;
 
     const data = await Data.create({
         gstPercentage,
         deliveryCharges,
+        expressDeliveryCharges,
         platformFee,
     });
     sendResponse(res, 200, data, "Data created successfully");
@@ -468,4 +474,39 @@ exports.deleteSubscriptionPlan = asyncHandler(async (req, res) => {
         deletedSubscriptionPlan._id,
         "Subscription plan deleted successfully",
     );
+});
+
+/* Banner Controller*/
+
+exports.createBanner = asyncHandler(async (req, res) => {
+    const { filename } = req.file;
+    const local_image_url = `uploads/${filename}`;
+    let image_url = `${req.protocol}://${req.hostname}/uploads/${filename}`;
+    if (process.env.NODE_ENV !== "PROD") {
+        image_url = `${req.protocol}://${req.hostname}:3000/uploads/${filename}`;
+    }
+
+    const banner = await bannerModel.create({
+        image_url,
+        local_image_url,
+    });
+    sendResponse(res, 201, banner, "Banner created successfully");
+});
+
+exports.getAllBanners = asyncHandler(async (req, res) => {
+    const banners = await bannerModel.find();
+    if (banners.length === 0) {
+        return sendResponse(res, 404, null, "Banners not found");
+    }
+    sendResponse(res, 200, banners, "Banners fetched successfully");
+});
+
+exports.deleteBanner = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const banner = await bannerModel.findByIdAndDelete(id);
+    if (!banner) {
+        return sendResponse(res, 404, null, "Banner not found");
+    }
+    if (banner.local_image_url) deleteFile(banner?.local_image_url);
+    sendResponse(res, 200, banner._id, "Banner deleted successfully");
 });

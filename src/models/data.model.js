@@ -1,21 +1,29 @@
 const { Schema, model } = require("mongoose");
 
-const dataSchema = new Schema({
-    gstPercentage:{
-        type: Number,
-        required: true,
-        default: 0,
+const dataSchema = new Schema(
+    {
+        gstPercentage: {
+            type: Number,
+            required: true,
+            default: 0,
+        },
+        deliveryCharges: {
+            type: Number,
+            required: true,
+            default: 0,
+        },
+        expressDeliveryCharges: {
+            type: Number,
+            required: true,
+            default: 0,
+        },
+        platformFee: {
+            type: Number,
+            required: true,
+            default: 0,
+        },
     },
-    deliveryCharges:{
-        type: Number,
-        required: true,
-        default: 0,
-    },
-    platformFee:{
-        type: Number,
-        required: true,
-        default: 0,
-    }
-}, { timestamps: true });
+    { timestamps: true },
+);
 
 module.exports = model("Data", dataSchema);

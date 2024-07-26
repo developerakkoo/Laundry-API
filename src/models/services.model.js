@@ -33,7 +33,6 @@ const servicesSchema = new Schema(
         },
         perPeacePrice: {
             type: Number,
-            required: true,
         },
         perKgPrice: {
             type: Number,

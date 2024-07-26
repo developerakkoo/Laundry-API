@@ -18,6 +18,10 @@ cron.schedule(
         const expiredSubscriptionIds = expiredSubscriptions.map(
             (sub) => sub._id,
         );
+        // No expired subscriptions found, exit the function
+        if (expiredSubscriptionIds.length === 0) {
+            return;
+        }
         // Update status of expired subscriptions to inactive
         await userSubscription.updateMany(
             { _id: { $in: expiredSubscriptionIds } },

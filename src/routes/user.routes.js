@@ -2,6 +2,7 @@ const router = require("express").Router();
 const userController = require("../controllers/user.controller");
 const { isAuthenticated } = require("../middlewares/auth.middleware");
 const categoryController = require("../controllers/category.controller");
+const { getAllBanners } = require("../controllers/admin.controller");
 
 router.post("/register", userController.registerUser);
 
@@ -35,5 +36,9 @@ router.delete("/delete-address/:addressId", userController.deleteAddress);
 router.get("/get-category/:id", categoryController.getCategoryById);
 
 router.get("/get-categories", categoryController.getAllCategory);
+
+/* banner route */
+
+router.get("/banner/get-all", getAllBanners);
 
 module.exports = { userRoutes: router };
