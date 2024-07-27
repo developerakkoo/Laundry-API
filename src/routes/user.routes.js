@@ -41,4 +41,8 @@ router.get("/get-categories", categoryController.getAllCategory);
 
 router.get("/banner/get-all", getAllBanners);
 
+/* Fetch address*/
+
+router.post("/fetch-address",userController.fetchAddress)
+
 module.exports = { userRoutes: router };

@@ -1,6 +1,7 @@
 const User = require("../models/user.model");
 const userAddress = require("../models/userAddress.model");
 const userSubscription = require("../models/subscription.model");
+const axios = require("axios");
 const {
     asyncHandler,
     sendResponse,
@@ -393,3 +394,35 @@ exports.deleteAddress = asyncHandler(async (req, res) => {
     await userAddress.deleteOne({ _id: addressId });
     return sendResponse(res, 200, {}, "Address deleted successfully");
 });
+
+exports.fetchAddress = asyncHandler(async (req, res) => {
+    const { address } = req.body;
+    if (!address) {
+        return sendResponse(res, 400, null, "Address is required");
+    }
+    const response = await axios.get(
+        "https://maps.googleapis.com/maps/api/geocode/json",
+        {
+            params: {
+                address: address,
+                key: process.env.GOOGLE_MAPS_API_KEY,
+            },
+        },
+    );
+
+    const results = response.data.results;
+    if (results.length === 0) {
+        return sendResponse(res, 404, null, "No addresses found");
+    }
+    sendResponse(
+        res,
+        200,
+        results.map((result) => ({
+            formatted_address: result.formatted_address,
+            location: result.geometry.location,
+        })),
+        "Address fetch successfully",
+    );
+});
+
+
