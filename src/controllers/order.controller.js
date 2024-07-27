@@ -6,6 +6,11 @@ const Cart = require("../models/cart.model");
 const dataModel = require("../models/data.model");
 const Service = require("../models/services.model");
 const PromoCode = require("../models/promoCode.model");
+const razorpay = require("razorpay");
+var instance = new razorpay({
+    key_id: process.env.RAZORPAY_ID,
+    key_secret: process.env.RAZORPAY_SECRET,
+});
 const {
     apiResponse,
     asyncHandler,
@@ -38,7 +43,8 @@ exports.calculateAmountToPay = asyncHandler(async (req, res) => {
         platformFee,
         expressDeliveryCharges,
     } = data[0];
-    const { userId, code, useWalletPoints, useExpressDelivery } = req.body;
+    const { userId, code, useWalletPoints, useExpressDelivery, selfService } =
+        req.body;
 
     // Find the user's cart
     const cart = await Cart.findOne({ userId });
@@ -75,10 +81,17 @@ exports.calculateAmountToPay = asyncHandler(async (req, res) => {
     // Calculate GST
     const gstAmount = (subtotal * gstPercentage) / 100;
 
-    // Determine delivery charges based on express delivery selection
-    const finalDeliveryCharges = useExpressDelivery
-        ? expressDeliveryCharges
-        : deliveryCharges;
+    // Determine delivery charges based on express delivery selection and self service
+    let finalDeliveryCharges = 0;
+    if (selfService) {
+        if (useExpressDelivery) {
+            finalDeliveryCharges = expressDeliveryCharges;
+        }
+    } else {
+        finalDeliveryCharges = useExpressDelivery
+            ? deliveryCharges + expressDeliveryCharges
+            : deliveryCharges;
+    }
 
     // Calculate the initial total amount to pay
     let totalAmountToPay =
@@ -88,7 +101,7 @@ exports.calculateAmountToPay = asyncHandler(async (req, res) => {
     let promoCodeId = null;
     let promoCodeDetails = null;
     let promoCodeData;
-    let deliveryBoyCompensation = 0;
+    let deliveryBoyCompensation = selfService ? 0 : deliveryCharges;
 
     // If a promo code is provided, validate and apply it
     if (code) {
@@ -113,16 +126,14 @@ exports.calculateAmountToPay = asyncHandler(async (req, res) => {
 
         switch (promoCode.codeType) {
             case 1: // FREE_DELIVERY
-                discount = finalDeliveryCharges;
-                deliveryBoyCompensation = finalDeliveryCharges;
+                discount = deliveryCharges;
                 promoCodeDetails = `FREE_DELIVERY`;
-                totalAmountToPay -= finalDeliveryCharges;
+                totalAmountToPay -= deliveryCharges;
                 break;
             case 2: // GET_OFF
                 discount = promoCode.discountAmount;
                 promoCodeDetails = `GET_OFF`;
                 totalAmountToPay -= promoCode.discountAmount;
-                deliveryBoyCompensation = finalDeliveryCharges;
                 break;
             case 3: // NEW_USER
                 const userOrderExist = await Order.findOne({ userId });
@@ -133,8 +144,7 @@ exports.calculateAmountToPay = asyncHandler(async (req, res) => {
                     );
                 }
                 discount = promoCode.discountAmount;
-                deliveryBoyCompensation = finalDeliveryCharges;
-                promoCodeDetails = `NEW_USER `;
+                promoCodeDetails = `NEW_USER`;
                 totalAmountToPay -= promoCode.discountAmount;
                 break;
             default:
@@ -174,10 +184,7 @@ exports.calculateAmountToPay = asyncHandler(async (req, res) => {
     const breakdown = {
         subtotal,
         gstAmount,
-        deliveryCharges:
-            promoCodeDetails && promoCodeDetails.startsWith("FREE_DELIVERY")
-                ? 0
-                : finalDeliveryCharges,
+        deliveryCharges: selfService ? 0 : finalDeliveryCharges,
         platformFee,
         expressDeliveryCharges: useExpressDelivery ? expressDeliveryCharges : 0,
         discount,
@@ -185,10 +192,29 @@ exports.calculateAmountToPay = asyncHandler(async (req, res) => {
         promoCodeId,
         totalAmountToPay,
         promoCodeDetails: promoCodeData,
+        deliveryBoyCompensation,
     };
 
     // Return the calculated amounts and breakdown
     return sendResponse(res, 200, breakdown, "Amount calculated successfully");
+});
+
+// Initiate payment request
+exports.initiatePayment = asyncHandler(async (req, res) => {
+    const amount = req.body.amount;
+
+    let options = {
+        amount: amount,
+        currency: "INR",
+    };
+
+    instance.orders.create(options, function (err, order) {
+        if (err) {
+            return sendResponse(res, 400, null, err.error.description);
+        }
+
+        sendResponse(res, 200, order, "Order Created.");
+    });
 });
 
 // Create an order
@@ -202,6 +228,7 @@ exports.createOrder = asyncHandler(async (req, res) => {
         selfService,
         priceDetails,
         paymentDetails,
+        orderType,
     } = req.body;
 
     // Find the cart for the user and populate service and shop details
@@ -233,13 +260,19 @@ exports.createOrder = asyncHandler(async (req, res) => {
         ],
         priceDetails,
         cashbackPoints,
+        orderType,
     });
     // Deduct the used points from the wallet
     useWalletPoints(userId, priceDetails.walletPointsUsed);
 
     // send notification to shop owner
     const shop = await shopModel.findById(cart.shopId);
-    sendNotification(shop.partnerId, "New Order", order);
+    //check order type is express or not based on that send notification
+    if (orderType === 1) {
+        sendNotification(shop.ownerId, "New Express Order", order);
+    } else {
+        sendNotification(shop.partnerId, "New Order", order);
+    }
 
     // Clear the cart after placing the order
     await Cart.deleteOne({ userId });
@@ -250,21 +283,25 @@ exports.createOrder = asyncHandler(async (req, res) => {
 
 // generate pickup and drop  otp
 exports.generateOtp = asyncHandler(async (req, res) => {
-    const { otpType } = req.query;
-
-    const savedOrder = await Order.findById(req.params.orderId);
+    const { otpType, orderId } = req.body;
+    const savedOrder = await Order.findById(orderId);
     if (!savedOrder) {
         return sendResponse(res, 400, null, `Invalid Data`);
     }
     if (otpType == 0) {
         if (savedOrder.pickupOtp != undefined) {
-            return sendResponse(res, 400, null, `Start Otp Already Generated`);
+            return sendResponse(res, 400, null, `Pickup Otp Already Generated`);
         }
         savedOrder.pickupOtp = generateOTP();
     }
     if (otpType == 1) {
         if (savedOrder.dropOtp != undefined) {
-            return sendResponse(res, 400, null, `Stop Otp Already Generated`);
+            return sendResponse(
+                res,
+                400,
+                null,
+                `Delivery Otp Already Generated`,
+            );
         }
         savedOrder.dropOtp = generateOTP();
     }
@@ -272,65 +309,164 @@ exports.generateOtp = asyncHandler(async (req, res) => {
     sendResponse(res, 200, generatedOtp, "Otp generated successfully");
 });
 
-// Complete an order
-exports.completeOrder = asyncHandler(async (req, res) => {
-    const { orderId, otp } = req.params;
-
-    const order = await Order.findById(orderId);
-    if (!order) {
-        return sendResponse(res, 404, null, "Order not found");
+// Verify otp and update order status
+exports.verifyOtpAndUpdateOrderStatus = asyncHandler(async (req, res) => {
+    const { otpType, otp, orderId } = req.body;
+    const savedOrder = await Order.findById(orderId);
+    if (!savedOrder) {
+        return sendResponse(res, 400, null, `Invalid Data`);
     }
-
-    if (order.dropOtp !== otp) {
-        return sendResponse(res, 400, null, "Invalid otp");
+    if (otpType == 0) {
+        if (savedOrder.pickupOtp !== otp) {
+            return sendResponse(res, 400, null, `Invalid Otp`);
+        }
+        savedOrder.pickupOtpVerifyStatus = true;
+        savedOrder.status = 3;
+        savedOrder.orderTimeline.push({
+            title: "Order Picked Up",
+            status: "ORDER_PICKED_UP",
+            dateTime: moment().format("MMMM Do YYYY, h:mm:ss a"),
+        });
+        sendNotification(
+            savedOrder.userId,
+            "Your Order is picked up confirmation",
+            savedOrder,
+        );
     }
-    order.deliveryOtpVerifyStatus = true;
-    order.status = "Completed";
-    await order.save();
-
-    // Calculate and add cashback points to the user's wallet
-    const cashbackPoints = await calculateCashbackPoints(order.totalAmount);
-    await addPointsToWallet(order.userId, cashbackPoints);
-
-    sendResponse(res, 201, order, "Order completed successfully");
+    if (otpType == 1) {
+        if (savedOrder.dropOtp != otp) {
+            return sendResponse(res, 400, null, `Stop Otp Already Generated`);
+        }
+        savedOrder.status == 7;
+        savedOrder.orderTimeline.push({
+            title: "Order Delivered",
+            status: "ORDER_DELIVERED",
+            dateTime: moment().format("MMMM Do YYYY, h:mm:ss a"),
+        });
+        sendNotification(
+            savedOrder.userId,
+            "Your Order Delivered ",
+            savedOrder,
+        );
+        savedOrder.deliveryOtpVerifyStatus = true;
+    }
+    const updatedOrder = await savedOrder.save();
+    sendResponse(res, 200, updatedOrder, "Order status updated successfully");
 });
 
-//TODO: Need to update this based on pickup and drop agent
+//Assign order delivery agent
 exports.assignDeliveryBoyToOrder = asyncHandler(async (req, res) => {
-    const { orderId, deliveryBoyId } = req.params;
+    const { orderId, orderPickupAgentId, orderDeliveryAgentId } = req.body;
 
     const order = await Order.findById(orderId);
     if (!order) {
         return sendResponse(res, 404, null, "Order not found");
     }
-
-    const deliveryBoy = await DeliveryBoy.findById(deliveryBoyId);
-    if (!deliveryBoy) {
-        return sendResponse(res, 404, null, "Delivery boy not found");
+    if (orderPickupAgentId) {
+        const deliveryBoy = await DeliveryBoy.findById(orderPickupAgentId);
+        if (!deliveryBoy) {
+            return sendResponse(res, 404, null, "Delivery boy not found");
+        }
+        // Check for pickup agent already assigned or not
+        if (
+            order.orderPickupAgentId !== null &&
+            order.orderPickupAgentId !== undefined
+        ) {
+            return sendResponse(
+                res,
+                400,
+                null,
+                "Order pickup agent already assigned",
+            );
+        }
+        order.orderPickupAgentId = orderPickupAgentId;
+        order.orderTimeline.push({
+            title: "Assigned Pickup Agent",
+            status: "ASSIGNED_PICKUP_AGENT",
+            dateTime: moment().format("MMMM Do YYYY, h:mm:ss a"),
+        });
+        //send notification to pickup agent
+        sendNotification(
+            orderDeliveryAgentId,
+            "Order Assign To You For Pickup",
+            order,
+        );
+        order.status = 2;
     }
-
-    order.deliveryBoyId = deliveryBoyId;
+    if (orderDeliveryAgentId) {
+        const deliveryBoy = await DeliveryBoy.findById(orderDeliveryAgentId);
+        if (!deliveryBoy) {
+            return sendResponse(res, 404, null, "Delivery boy not found");
+        }
+        // Check for delivery agent already assigned or not
+        if (
+            order.orderDeliveryAgentId !== null &&
+            order.orderDeliveryAgentId !== undefined
+        ) {
+            return sendResponse(
+                res,
+                400,
+                null,
+                "Order delivery agent already assigned",
+            );
+        }
+        order.orderDeliveryAgentId = orderDeliveryAgentId;
+        order.orderTimeline.push({
+            title: "Assigned Delivery Agent",
+            status: "ASSIGNED_DELIVERY_AGENT",
+            dateTime: moment().format("MMMM Do YYYY, h:mm:ss a"),
+        });
+        order.status = 6;
+        //send notification to delivery agent
+        sendNotification(
+            orderDeliveryAgentId,
+            "Order Assign To You For Delivery",
+            order,
+        );
+    }
     await order.save();
 
     sendResponse(res, 200, order, "Delivery boy assigned successfully");
 });
 
-//TODO: need to change order status and  implement the notifications based on order status
+// update order status
 exports.changeOrderStatus = asyncHandler(async (req, res) => {
-    const { orderId, status } = req.params;
+    const { orderId, status } = req.body;
 
     const order = await Order.findById(orderId);
     if (!order) {
         return sendResponse(res, 404, null, "Order not found");
     }
-
+    if (status == 2) {
+        order.orderTimeline.push({
+            title: "Order Confirmed",
+            status: "ORDER_CONFIRMED",
+            dateTime: moment().format("MMMM Do YYYY, h:mm:ss a"),
+        });
+        sendNotification(order.userId, "Your Order is confirmed", order);
+    }
+    if (status == 4) {
+        order.orderTimeline.push({
+            title: "Order On The Way",
+            status: "ORDER_ON_THE_WAY",
+            dateTime: moment().format("MMMM Do YYYY, h:mm:ss a"),
+        });
+        sendNotification(order.userId, "Your Order is in process", order);
+    }
+    if (status == 5) {
+        order.orderTimeline.push({
+            title: "Order Ready to deliver",
+            status: "ORDER_READY_TO_DELIVERED",
+            dateTime: moment().format("MMMM Do YYYY, h:mm:ss a"),
+        });
+        sendNotification(order.userId, "Your Order ready to deliver", order);
+    }
     order.status = status;
     await order.save();
-
     sendResponse(res, 200, order, "Order status updated successfully");
 });
 
-//TODO: Need to update this api get order based on pickup and drop agent id
+//Get all orders by delivery boy Id
 exports.getAllOrderByDeliveryBoyId = asyncHandler(async (req, res) => {
     const { status } = req.query;
     const pageNumber = parseInt(req.query.page) || 1;
@@ -344,7 +480,14 @@ exports.getAllOrderByDeliveryBoyId = asyncHandler(async (req, res) => {
     }
 
     const dataCount = await Order.countDocuments(dbQuery);
-    const orders = await Order.find(dbQuery).skip(skip).limit(pageSize);
+    const orders = await Order.find({
+        $or: [
+            { orderPickupAgentId: deliveryBoyId },
+            { orderDeliveryAgentId: deliveryBoyId },
+        ],
+    })
+        .skip(skip)
+        .limit(pageSize);
     const startItem = skip + 1;
     const endItem = Math.min(
         startItem + pageSize - 1,

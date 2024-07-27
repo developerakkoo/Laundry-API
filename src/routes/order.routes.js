@@ -7,7 +7,20 @@ const { isAuthenticated } = require("../middlewares/auth.middleware");
 
 router.post("/calculate/amount-to-pay", orderController.calculateAmountToPay);
 
+router.post("/initiate/payment", orderController.initiatePayment);
+
 router.post("/place", orderController.createOrder);
+
+router.post("/generate/otp", orderController.generateOtp);
+
+router.post(
+    "/verify/otp/update-order",
+    orderController.verifyOtpAndUpdateOrderStatus,
+);
+
+router.put("/update/status", orderController.changeOrderStatus);
+
+router.put("/assign/deliveryAgent", orderController.assignDeliveryBoyToOrder);
 
 router.get(
     "/get-by/deliveryBoyId/:deliveryBoyId",

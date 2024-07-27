@@ -223,7 +223,7 @@ router.delete(
 
 /***** Order Routes *****/
 
-router.put("/:orderId/complete", orderPermission, completeOrder);
+router.put("/:orderId/complete", orderPermission, changeOrderStatus);
 
 router.put(
     "/:orderId/assignDeliveryBoy/:deliveryBoyId",

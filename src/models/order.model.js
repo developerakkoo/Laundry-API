@@ -7,6 +7,11 @@ const orderSchema = new Schema(
             ref: "User",
             required: true,
         },
+        orderType: {
+            type: Number,
+            enum: [0, 1], // 0 = regular 1 = express
+            default: 0,
+        },
         shopId: {
             type: Schema.Types.ObjectId,
             ref: "Shope",
@@ -43,12 +48,12 @@ const orderSchema = new Schema(
             enum: [
                 0, // "Pending",
                 1, // "Confirm",
-                2, // "Picked-Up",
-                3, // "In-Process",
-                4, // "Ready-for-Dropoff",
-                5, // "Dropped-Off",
-                6, // "Completed",
-                7, // "Cancelled",
+                2, // "Picked-Up agent assigned",
+                3, //  Picked-Up Done ,
+                4, // "In-Process",
+                5, // "Ready-for-Drop off" ,
+                6, // "Dropped-Off agent assigned",
+                7, // "Completed",
             ],
             default: 0,
         },
@@ -106,10 +111,10 @@ const orderSchema = new Schema(
                 type: Number,
                 required: true,
             },
-            // deliveryBoyCompensation: {
-            //     type: Number,
-            //     required: true,
-            // },
+            deliveryBoyCompensation: {
+                type: Number,
+                required: true,
+            },
             platformFee: {
                 type: Number,
                 required: true,
