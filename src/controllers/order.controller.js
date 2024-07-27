@@ -9,8 +9,8 @@ const Service = require("../models/services.model");
 const PromoCode = require("../models/promoCode.model");
 const razorpay = require("razorpay");
 var instance = new razorpay({
-    key_id: process.env.RAZORPAY_ID,
-    key_secret: process.env.RAZORPAY_SECRET,
+    key_id: "rzp_test_q92KbX0ZwFyaN0",
+    key_secret: "UsklYi4BRYogWcehPPjnBtSu",
 });
 const {
     apiResponse,
