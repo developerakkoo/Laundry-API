@@ -45,6 +45,26 @@ const shopSchema = new Schema(
             ref: "partner",
             required: true,
         },
+        shopeCloseImg: {
+            type: String,
+            required: true,
+            default: "http://localhost:3000/uploads/default/17218141423.png",
+        },
+        isOpen: {
+            type: Boolean,
+            required: true,
+            default: false,
+        },
+
+        shopTimeTable: {
+            type: [
+                {
+                    day: String,
+                    openingTime: String,
+                    closingTime: String,
+                },
+            ],
+        },
         status: {
             type: Number,
             required: true,
@@ -54,7 +74,5 @@ const shopSchema = new Schema(
     },
     { timestamps: true },
 );
-
-
 
 module.exports = model("Shope", shopSchema);

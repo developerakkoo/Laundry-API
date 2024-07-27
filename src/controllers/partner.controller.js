@@ -11,8 +11,6 @@ const {
 } = require("../utils/helper.utils");
 const { cookieOptions } = require("../constant");
 
-
-
 exports.registerUser = asyncHandler(async (req, res) => {
     const { name, email, phoneNumber, password } = req.body;
     const isExistUser = await partnerModel.findOne({
@@ -223,7 +221,8 @@ exports.getAllPartner = asyncHandler(async (req, res) => {
 
 /***** Shope *****/
 exports.createShope = asyncHandler(async (req, res) => {
-    const { name, address, partnerId, category, lng, lat } = req.body;
+    const { name, address, partnerId, category, lng, lat, shopTimeTable } =
+        req.body;
     const partner = await partnerModel.findById(partnerId);
     if (!partner) {
         return sendResponse(res, 404, null, "User not found");
@@ -236,6 +235,7 @@ exports.createShope = asyncHandler(async (req, res) => {
         name,
         address,
         category,
+        shopTimeTable,
         location: {
             type: "Point",
             coordinates: [lng, lat],
@@ -275,13 +275,14 @@ exports.uploadShopeImage = asyncHandler(async (req, res) => {
 });
 
 exports.updateShope = asyncHandler(async (req, res) => {
-    const { name, status, address } = req.body;
+    const { name, status, address, isOpen } = req.body;
     const user = await shopeModel.findByIdAndUpdate(
         req.params.id,
         {
             $set: {
                 name,
                 status,
+                isOpen,
                 ...(address && {
                     "address.addressLine1": address.addressLine1,
                     "address.addressLine2": address.addressLine2,
