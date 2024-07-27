@@ -73,6 +73,7 @@ const { isAuthenticated } = require("./middlewares/auth.middleware");
 const { deliveryAgentRoutes } = require("./routes/deliveryAgent.routes");
 const { notificationRoutes } = require("./routes/notification.routes");
 const { userSubscriptionRoutes } = require("./routes/subscription.routes");
+const { sendResponse } = require("./utils/helper.utils");
 /*Api Logger */
 app.use(morganMiddleware);
 
@@ -92,6 +93,10 @@ app.use(
     // isAuthenticated,
     express.static(path.join(__dirname, "uploads")),
 );
+
+app.use("*", (req, res) => {
+    sendResponse(res, 404, null, "Not Found");
+});
 
 app.use(errorHandler);
 module.exports = { app };
