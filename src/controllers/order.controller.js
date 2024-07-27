@@ -1,3 +1,4 @@
+require("dotenv").config();
 const Order = require("../models/order.model");
 const shopModel = require("../models/shope.model");
 const Wallet = require("../models/wallet.model");
