@@ -10,9 +10,6 @@ const PromoCode = require("../models/promoCode.model");
 const razorpay = require("razorpay");
 const key = process.env.RAZORPAY_ID;
 const secret = process.env.RAZORPAY_SECRET;
-console.log("====================================");
-console.log(key, secret);
-console.log("====================================");
 
 var instance = new razorpay({
     key_id: key,
