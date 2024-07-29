@@ -1,6 +1,7 @@
 const User = require("../models/user.model");
 const userAddress = require("../models/userAddress.model");
 const userSubscription = require("../models/subscription.model");
+const Service = require("../models/services.model");
 const axios = require("axios");
 const {
     asyncHandler,
@@ -12,6 +13,10 @@ const {
 const { cookieOptions } = require("../constant");
 const walletModel = require("../models/wallet.model");
 const Cart = require("../models/cart.model");
+const {
+    getRecentOrders,
+    analyzeOrders,
+} = require("../utils/recommendation.utils");
 
 exports.registerUser = asyncHandler(async (req, res) => {
     const { name, email, phoneNumber, password } = req.body;
@@ -425,4 +430,14 @@ exports.fetchAddress = asyncHandler(async (req, res) => {
     );
 });
 
+exports.getRecommendations = asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+    const orders = await getRecentOrders(userId);
+    const popularItems = analyzeOrders(orders);
 
+    const recommendedServices = await Service.find({
+        _id: { $in: popularItems },
+    });
+
+    sendResponse(res, 200, recommendedServices, " Recommendation for you");
+});

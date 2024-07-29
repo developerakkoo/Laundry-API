@@ -43,6 +43,10 @@ router.get("/banner/get-all", getAllBanners);
 
 /* Fetch address*/
 
-router.post("/fetch-address",userController.fetchAddress)
+router.post("/fetch-address", userController.fetchAddress);
+
+/* Get Recommendation */
+
+router.get("/get-recommendations/:userId", userController.getRecommendations);
 
 module.exports = { userRoutes: router };
