@@ -48,14 +48,24 @@ const shopSchema = new Schema(
         shopeCloseImg: {
             type: String,
             required: true,
-            default: "http://localhost:3000/uploads/default/17218141423.png",
+            default:
+                "https://api.breezyemart.com/uploads/default/17218141423.png",
         },
         isOpen: {
             type: Boolean,
             required: true,
             default: false,
         },
-
+        isAcceptExpressService: {
+            type: Boolean,
+            required: true,
+            default: false,
+        },
+        expressServiceCharges: {
+            type: Number,
+            required: true,
+            default: 0,
+        },
         shopTimeTable: {
             type: [
                 {

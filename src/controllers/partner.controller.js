@@ -1,6 +1,7 @@
 const partnerModel = require("../models/partner.model");
 const shopeModel = require("../models/shope.model");
 const servicesModel = require("../models/services.model");
+const { ObjectId } = require("mongoose").Types;
 const {
     asyncHandler,
     sendResponse,
@@ -221,8 +222,17 @@ exports.getAllPartner = asyncHandler(async (req, res) => {
 
 /***** Shope *****/
 exports.createShope = asyncHandler(async (req, res) => {
-    const { name, address, partnerId, category, lng, lat, shopTimeTable } =
-        req.body;
+    const {
+        name,
+        address,
+        partnerId,
+        category,
+        lng,
+        lat,
+        shopTimeTable,
+        isAcceptExpressService,
+        expressServiceCharges,
+    } = req.body;
     const partner = await partnerModel.findById(partnerId);
     if (!partner) {
         return sendResponse(res, 404, null, "User not found");
@@ -240,6 +250,8 @@ exports.createShope = asyncHandler(async (req, res) => {
             type: "Point",
             coordinates: [lng, lat],
         },
+        isAcceptExpressService,
+        expressServiceCharges,
         partnerId,
     });
     return sendResponse(res, 201, shope, "Shope created successfully");
@@ -275,7 +287,14 @@ exports.uploadShopeImage = asyncHandler(async (req, res) => {
 });
 
 exports.updateShope = asyncHandler(async (req, res) => {
-    const { name, status, address, isOpen } = req.body;
+    const {
+        name,
+        status,
+        address,
+        isOpen,
+        isAcceptExpressService,
+        expressServiceCharges,
+    } = req.body;
     const user = await shopeModel.findByIdAndUpdate(
         req.params.id,
         {
@@ -283,6 +302,8 @@ exports.updateShope = asyncHandler(async (req, res) => {
                 name,
                 status,
                 isOpen,
+                isAcceptExpressService,
+                expressServiceCharges,
                 ...(address && {
                     "address.addressLine1": address.addressLine1,
                     "address.addressLine2": address.addressLine2,
@@ -348,6 +369,99 @@ exports.getAllShope = asyncHandler(async (req, res) => {
     );
 });
 
+exports.getShopeByCategoryId = asyncHandler(async (req, res) => {
+    const { search, latitude, longitude, categoryId, userId } = req.query;
+    const pageNumber = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
+    const skip = (pageNumber - 1) * pageSize;
+
+    let dbQuery = {};
+
+    // Search based on user query
+    if (search) {
+        const searchRegex = new RegExp(search, "i");
+        dbQuery.$or = [{ name: { $regex: searchRegex } }];
+    }
+
+    // Filter by category
+    if (categoryId) {
+        dbQuery.category = mongoose.Types.ObjectId(categoryId);
+    }
+
+    let pipeline = [];
+
+    // If location is provided, use $geoNear to sort by proximity
+    if (latitude && longitude) {
+        pipeline.push({
+            $geoNear: {
+                near: {
+                    type: "Point",
+                    coordinates: [parseFloat(longitude), parseFloat(latitude)],
+                },
+                distanceField: "distance",
+                spherical: true,
+                query: dbQuery,
+            },
+        });
+    } else {
+        pipeline.push({
+            $match: dbQuery,
+        });
+    }
+
+    // Pagination stages
+    pipeline.push({ $skip: skip }, { $limit: pageSize });
+
+    const [shops, dataCount] = await Promise.all([
+        Shope.aggregate(pipeline),
+        Shope.countDocuments(dbQuery),
+    ]);
+
+    if (shops.length === 0) {
+        return sendResponse(res, 404, null, "Shops not found");
+    }
+
+    // Fetch user's favorite shops
+    let favoriteShops = [];
+    if (userId) {
+        favoriteShops = await Favorite.find({ userId }).select("shopId").lean();
+        favoriteShops = favoriteShops.map((fav) => fav.shopId.toString());
+    }
+
+    // Add isFavorite field to each shop
+    shops.forEach((shop) => {
+        shop.isFavorite = favoriteShops.includes(shop._id.toString());
+    });
+
+    const startItem = skip + 1;
+    const endItem = Math.min(
+        startItem + pageSize - 1,
+        startItem + shops.length - 1,
+    );
+    const totalPages = Math.ceil(dataCount / pageSize);
+
+    return sendResponse(
+        res,
+        200,
+        {
+            content: shops,
+            startItem,
+            endItem,
+            totalPages,
+            pageSize: shops.length,
+            totalDoc: dataCount,
+        },
+        "Shops fetched successfully",
+    );
+});
+exports.getShopeById = asyncHandler(async (req, res) => {
+    const shope = await shopeModel.findById(req.params.id);
+    if (!shope) {
+        return sendResponse(res, 404, null, "Shope not found");
+    }
+    return sendResponse(res, 200, shope, "Shope fetched successfully");
+});
+
 exports.getAllShopeByPartnerId = asyncHandler(async (req, res) => {
     const shope = await shopeModel.find({ partnerId: req.params.id });
     if (!shope) {
@@ -363,15 +477,6 @@ exports.getShopeById = asyncHandler(async (req, res) => {
     }
     return sendResponse(res, 200, shope, "Shope fetched successfully");
 });
-
-exports.getShopeByCategoryId = asyncHandler(async (req, res) => {
-    const shope = await shopeModel.find({ category: req.params.id });
-    if (shope.length == 0) {
-        return sendResponse(res, 404, null, "Shope not found");
-    }
-    return sendResponse(res, 200, shope, "Shope fetched successfully");
-});
-
 exports.deleteShopeById = asyncHandler(async (req, res) => {
     const shope = await shopeModel.findByIdAndDelete(req.params.id);
     if (!shope) {
