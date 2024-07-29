@@ -6,7 +6,7 @@ const cookieOptions = {
 };
 
 module.exports = {
-    DB_NAME: "Laundry-app",
+    DB_NAME: "BreezyEmart",
     BASE_URL: "/api/v1",
     hashCount: 14,
     cookieOptions,
