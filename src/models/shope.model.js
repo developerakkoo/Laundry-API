@@ -84,5 +84,6 @@ const shopSchema = new Schema(
     },
     { timestamps: true },
 );
-
+// Create a 2dsphere index on the location field
+shopSchema.index({ location: "2dsphere" });
 module.exports = model("Shope", shopSchema);

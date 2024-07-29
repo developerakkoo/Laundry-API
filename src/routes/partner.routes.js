@@ -38,7 +38,7 @@ router.get("/shop/get/:id", partnerController.getShopeById);
 
 router.get("/shop/get/partnerId/:id", partnerController.getAllShopeByPartnerId);
 
-router.get("/shop/get/by/category", partnerController.getShopeByCategoryId);
+router.post("/shop/get/by/category", partnerController.getShopeByCategoryId);
 
 router.get("/shop/get-all", partnerController.getAllShope);
 

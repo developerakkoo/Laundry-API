@@ -4,7 +4,7 @@ const { asyncHandler, sendResponse } = require("../utils/helper.utils");
 exports.addFavorite = asyncHandler(async (req, res) => {
     const { userId, serviceId, shopId } = req.body;
     if (serviceId) {
-        let favService = favoriteModel.findById(serviceId);
+        let favService = await favoriteModel.findOne({ serviceId });
         if (favService) {
             return sendResponse(
                 res,
@@ -25,7 +25,7 @@ exports.addFavorite = asyncHandler(async (req, res) => {
         );
     }
     if (shopId) {
-        let favShop = favoriteModel.findById(shopId);
+        let favShop = await favoriteModel.findOne({ shopId });
         if (favShop) {
             return sendResponse(
                 res,

@@ -1,6 +1,7 @@
 const partnerModel = require("../models/partner.model");
 const shopeModel = require("../models/shope.model");
 const servicesModel = require("../models/services.model");
+const Favorite = require("../models/favorite.model");
 const { ObjectId } = require("mongoose").Types;
 const {
     asyncHandler,
@@ -369,8 +370,11 @@ exports.getAllShope = asyncHandler(async (req, res) => {
     );
 });
 
+
+const axios = require('axios'); // Ensure axios is installed
+
 exports.getShopeByCategoryId = asyncHandler(async (req, res) => {
-    const { search, latitude, longitude, categoryId, userId } = req.query;
+    const { latitude, longitude, categoryId, userId } = req.body;
     const pageNumber = parseInt(req.query.page) || 1;
     const pageSize = parseInt(req.query.pageSize) || 10;
     const skip = (pageNumber - 1) * pageSize;
@@ -378,14 +382,14 @@ exports.getShopeByCategoryId = asyncHandler(async (req, res) => {
     let dbQuery = {};
 
     // Search based on user query
-    if (search) {
-        const searchRegex = new RegExp(search, "i");
+    if (req.query.search) {
+        const searchRegex = new RegExp(req.query.search, "i");
         dbQuery.$or = [{ name: { $regex: searchRegex } }];
     }
 
     // Filter by category
     if (categoryId) {
-        dbQuery.category = mongoose.Types.ObjectId(categoryId);
+        dbQuery.category = new ObjectId(categoryId);
     }
 
     let pipeline = [];
@@ -398,7 +402,7 @@ exports.getShopeByCategoryId = asyncHandler(async (req, res) => {
                     type: "Point",
                     coordinates: [parseFloat(longitude), parseFloat(latitude)],
                 },
-                distanceField: "distance",
+                distanceField: "geoDistance",
                 spherical: true,
                 query: dbQuery,
             },
@@ -413,8 +417,8 @@ exports.getShopeByCategoryId = asyncHandler(async (req, res) => {
     pipeline.push({ $skip: skip }, { $limit: pageSize });
 
     const [shops, dataCount] = await Promise.all([
-        Shope.aggregate(pipeline),
-        Shope.countDocuments(dbQuery),
+        shopeModel.aggregate(pipeline),
+        shopeModel.countDocuments(dbQuery),
     ]);
 
     if (shops.length === 0) {
@@ -427,6 +431,32 @@ exports.getShopeByCategoryId = asyncHandler(async (req, res) => {
         favoriteShops = await Favorite.find({ userId }).select("shopId").lean();
         favoriteShops = favoriteShops.map((fav) => fav.shopId.toString());
     }
+
+    // Calculate road distances
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY; // Replace with your Google Maps API key
+    const origins = [`${latitude},${longitude}`];
+    const destinations = shops.map(shop => `${shop.location.coordinates[1]},${shop.location.coordinates[0]}`);
+
+    const response = await axios.get('https://maps.googleapis.com/maps/api/distancematrix/json', {
+        params: {
+            origins: origins.join('|'),
+            destinations: destinations.join('|'),
+            key: apiKey,
+        },
+    });
+
+    const distanceMatrix = response.data;
+
+    // Add road distance to each shop
+    shops.forEach((shop, index) => {
+        const element = distanceMatrix.rows[0].elements[index];
+        if (element && element.distance) {
+            shop.distance = (element.distance.value * 0.001).toFixed(2); // Convert meters to kilometers
+        }
+    });
+
+    // Sort shops by distance (nearest first)
+    shops.sort((a, b) => a.distance - b.distance);
 
     // Add isFavorite field to each shop
     shops.forEach((shop) => {
@@ -454,6 +484,7 @@ exports.getShopeByCategoryId = asyncHandler(async (req, res) => {
         "Shops fetched successfully",
     );
 });
+
 exports.getShopeById = asyncHandler(async (req, res) => {
     const shope = await shopeModel.findById(req.params.id);
     if (!shope) {
