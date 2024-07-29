@@ -49,7 +49,7 @@ exports.addFavorite = asyncHandler(async (req, res) => {
 });
 
 exports.removeFavorite = asyncHandler(async (req, res) => {
-    const { userId, serviceId, shopId } = req.body;
+    const { userId, serviceId, shopId } = req.query;
     if (serviceId) {
         await favoriteModel.findOneAndDelete({ userId, serviceId });
         return sendResponse(res, 200, null, "Service removed from favorite");

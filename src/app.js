@@ -73,6 +73,7 @@ const { isAuthenticated } = require("./middlewares/auth.middleware");
 const { deliveryAgentRoutes } = require("./routes/deliveryAgent.routes");
 const { notificationRoutes } = require("./routes/notification.routes");
 const { userSubscriptionRoutes } = require("./routes/subscription.routes");
+const { favoriteRoutes } = require("./routes/favorite.routes");
 const { sendResponse } = require("./utils/helper.utils");
 /*Api Logger */
 app.use(morganMiddleware);
@@ -84,8 +85,9 @@ app.use(`${BASE_URL}/admin`, adminRoutes);
 app.use(`${BASE_URL}/message`, messageRoutes);
 app.use(`${BASE_URL}/partner`, partnerRoutes);
 app.use(`${BASE_URL}/ratting`, rattingRoutes);
-app.use(`${BASE_URL}/deliveryAgent`, deliveryAgentRoutes);
+app.use(`${BASE_URL}/favorite`, favoriteRoutes);
 app.use(`${BASE_URL}/notification`, notificationRoutes);
+app.use(`${BASE_URL}/deliveryAgent`, deliveryAgentRoutes);
 app.use(`${BASE_URL}/subscription`, userSubscriptionRoutes);
 
 app.use(
