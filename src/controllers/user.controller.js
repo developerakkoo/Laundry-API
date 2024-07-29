@@ -41,8 +41,8 @@ exports.registerUser = asyncHandler(async (req, res) => {
             "Something went wrong while registering the user",
         );
     }
-    /***** creating cart for new user *****/
-    await Cart.create({ userId: newUser._id });
+    // /***** creating cart for new user *****/
+    // await Cart.create({ userId: newUser._id });
     /***** creating wallet for new user *****/
     await walletModel.create({ userId: newUser._id });
     return sendResponse(res, 201, newUser, "User created successfully");
