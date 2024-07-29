@@ -205,20 +205,15 @@ exports.calculateAmountToPay = asyncHandler(async (req, res) => {
 
 // Initiate payment request
 exports.initiatePayment = asyncHandler(async (req, res) => {
-    const amount = req.body.amount;
+    const { amount } = req.body;
 
-    let options = {
-        amount: amount,
+    const options = {
+        amount: amount * 100, // Razorpay expects the amount in paise
         currency: "INR",
     };
 
-    instance.orders.create(options, function (err, order) {
-        if (err) {
-            return sendResponse(res, 400, null, err.error.description);
-        }
-
-        sendResponse(res, 200, order, "Order Created.");
-    });
+    const order = await instance.orders.create(options);
+    sendResponse(res, 200, order, "Order Created.");
 });
 
 // Create an order
