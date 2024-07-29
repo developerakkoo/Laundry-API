@@ -481,7 +481,7 @@ exports.deleteSubscriptionPlan = asyncHandler(async (req, res) => {
 exports.createBanner = asyncHandler(async (req, res) => {
     const { filename } = req.file;
     const local_image_url = `uploads/${filename}`;
-    let image_url = `${req.protocol}://${req.hostname}/uploads/${filename}`;
+    let image_url = `https://${req.hostname}/uploads/${filename}`;
     if (process.env.NODE_ENV !== "PROD") {
         image_url = `${req.protocol}://${req.hostname}:3000/uploads/${filename}`;
     }

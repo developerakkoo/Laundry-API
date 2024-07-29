@@ -265,7 +265,7 @@ exports.uploadShopeImage = asyncHandler(async (req, res) => {
     }
     const { filename } = req.file;
     const relativePath = `uploads/${filename}`;
-    let image_url = `${req.protocol}://${req.hostname}/uploads/${filename}`;
+    let image_url = `https://${req.hostname}/uploads/${filename}`;
     if (process.env.NODE_ENV !== "PROD") {
         image_url = `${req.protocol}://${req.hostname}:3000/uploads/${filename}`;
     }
@@ -524,7 +524,7 @@ exports.uploadServiceImage = asyncHandler(async (req, res) => {
     }
     const { filename } = req.file;
     const relativePath = `uploads/${filename}`;
-    let image_url = `${req.protocol}://${req.hostname}/uploads/${filename}`;
+    let image_url = `https://${req.hostname}/uploads/${filename}`;
     if (process.env.NODE_ENV !== "PROD") {
         image_url = `${req.protocol}://${req.hostname}:3000/uploads/${filename}`;
     }
