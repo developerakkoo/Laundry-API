@@ -41,12 +41,7 @@ exports.calculateAmountToPay = asyncHandler(async (req, res) => {
         );
     }
 
-    const {
-        gstPercentage,
-        deliveryCharges,
-        platformFee,
-        expressDeliveryCharges,
-    } = data[0];
+    const { gstPercentage, deliveryCharges, platformFee } = data[0];
     const { userId, code, useWalletPoints, useExpressDelivery, selfService } =
         req.body;
 
@@ -54,6 +49,20 @@ exports.calculateAmountToPay = asyncHandler(async (req, res) => {
     const cart = await Cart.findOne({ userId });
     if (!cart || cart.products.length === 0) {
         return sendResponse(res, 400, null, "Cart is empty");
+    }
+    let expressDeliveryCharges = 0;
+    if (useExpressDelivery) {
+        const savedShop = await shopModel.findById(cart.shopId);
+        if (savedShop.isAcceptExpressService) {
+            expressDeliveryCharges = savedShop.expressServiceCharges;
+        } else {
+            return sendResponse(
+                res,
+                400,
+                null,
+                "This Shop Not Accept Express Service",
+            );
+        }
     }
 
     // Calculate the subtotal (total product cost)

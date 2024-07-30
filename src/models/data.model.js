@@ -12,11 +12,11 @@ const dataSchema = new Schema(
             required: true,
             default: 0,
         },
-        expressDeliveryCharges: {
-            type: Number,
-            required: true,
-            default: 0,
-        },
+        // expressDeliveryCharges: {
+        //     type: Number,
+        //     required: true,
+        //     default: 0,
+        // },
         platformFee: {
             type: Number,
             required: true,
