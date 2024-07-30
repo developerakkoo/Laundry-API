@@ -5,6 +5,11 @@ const { Types } = require("mongoose");
 
 exports.addRatting = asyncHandler(async (req, res) => {
     const { userId, serviceId, description, star } = req.body;
+    const images = req.files
+        ? req.files.map(
+              (file) => `https://${req.hostname}/uploads/${file.filename}`,
+          )
+        : [];
     const isExistRatting = await ratingModel.findOne({ userId, serviceId });
     if (isExistRatting) {
         return sendResponse(res, 400, null, "Ratting already exist");
@@ -14,6 +19,7 @@ exports.addRatting = asyncHandler(async (req, res) => {
         serviceId,
         description,
         star,
+        images,
     });
     return sendResponse(res, 200, ratting, "Ratting added successfully");
 });
@@ -114,94 +120,151 @@ exports.getRattingStatsByService = asyncHandler(async (req, res) => {
         return sendResponse(res, 404, [], "No ratings found for this service");
     }
 
-    return sendResponse(res, 200, stats[0], "Rating stats fetched successfully");
+    return sendResponse(
+        res,
+        200,
+        stats[0],
+        "Rating stats fetched successfully",
+    );
 });
 
 exports.getRattingStatsByShop = asyncHandler(async (req, res) => {
-    // Perform the aggregation pipeline on the Service model
-    const stats = await serviceModel.aggregate([
-        // Stage 1: Match services for a specific shop using the provided shopId
+    const shopId = new Types.ObjectId(req.params.shopId);
+    const includeRatings = req.query.rd === "1"; // Check if 'rd' query parameter is set to '1'
+
+    // Aggregation pipeline to calculate stats
+    const [stats] = await serviceModel.aggregate([
         {
             $match: {
-                shopeId: new Types.ObjectId(req.params.shopId),
+                shopeId: shopId,
             },
         },
-        // Stage 2: Lookup ratings for each service
         {
             $lookup: {
-                as: "ratings", // Name of the new array field to add to the documents
-                from: "ratings", // Collection name in the database to join with
-                foreignField: "serviceId", // Field in the ratings collection to join on
-                localField: "_id", // Field in the services collection to join on
+                as: "ratings",
+                from: "ratings",
+                foreignField: "serviceId",
+                localField: "_id",
             },
         },
-        // Stage 3: Unwind the ratings array
         {
             $unwind: {
-                path: "$ratings", // Path to the array field to unwind
+                path: "$ratings",
+                preserveNullAndEmptyArrays: true, // Include services with no ratings
             },
         },
-        // Stage 4: Group by service to calculate the total stars and count of ratings for each service
         {
             $group: {
-                _id: "$_id", // Group by the service ID
-                serviceName: {
-                    $first: "$name", // Get the name of the service
-                },
-                shopId: {
-                    $first: "$shopeId", // Get the shop ID
-                },
-                totalStars: {
-                    $sum: "$ratings.star", // Sum of the star ratings for the service
-                },
+                _id: "$_id",
+                serviceName: { $first: "$name" },
+                shopId: { $first: "$shopeId" },
+                totalStars: { $sum: "$ratings.star" },
                 ratingCount: {
-                    $sum: 1, // Count of the ratings for the service
+                    $sum: {
+                        $cond: [{ $ifNull: ["$ratings.star", false] }, 1, 0],
+                    },
                 },
             },
         },
-        // Stage 5: Group by shop to calculate the total stars and count of ratings for the shop
         {
             $group: {
-                _id: "$shopId", // Group by the shop ID
-                totalStars: {
-                    $sum: "$totalStars", // Sum of the total stars for the shop
-                },
-                totalRatings: {
-                    $sum: "$ratingCount", // Sum of the rating counts for the shop
-                },
+                _id: "$shopId",
+                totalStars: { $sum: "$totalStars" },
+                totalRatings: { $sum: "$ratingCount" },
             },
         },
-        // Stage 6: Project the results to include the average rating, total ratings, and shop ID
         {
             $project: {
-                _id: 0, // Exclude the _id field from the result
-                shopeId: "$_id", // Include the shop ID
+                _id: 0,
+                shopeId: "$_id",
                 averageRating: {
                     $cond: [
-                        {
-                            $eq: ["$totalRatings", 0], // If there are no ratings
-                        },
-                        0, // Set the average rating to 0 if no ratings
+                        { $eq: ["$totalRatings", 0] },
+                        0,
                         {
                             $round: [
-                                {
-                                    $divide: ["$totalStars", "$totalRatings"], // Calculate the average rating
-                                },
-                                1, // Round the average rating to 1 decimal places
+                                { $divide: ["$totalStars", "$totalRatings"] },
+                                1,
                             ],
                         },
                     ],
                 },
-                totalRatings: 1, // Include the total ratings count
+                totalRatings: 1,
             },
         },
     ]);
 
-    // Check if no ratings are found
-    if (stats.length === 0) {
-        return sendResponse(res, 404, [], "No ratings found for this shop");
+    let ratings = [];
+    if (includeRatings) {
+        // Fetch all ratings for the shop
+        ratings = await ratingModel.aggregate([
+            {
+                $match: {
+                    serviceId: {
+                        $in: await serviceModel
+                            .find({ shopeId: shopId })
+                            .distinct("_id"),
+                    },
+                },
+            },
+            {
+                $lookup: {
+                    from: "users", // Replace with your actual user collection name
+                    localField: "userId",
+                    foreignField: "_id",
+                    as: "user",
+                },
+            },
+            {
+                $unwind: {
+                    path: "$user",
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
+            {
+                $lookup: {
+                    as: "serviceDetails",
+                    from: "services",
+                    foreignField: "_id",
+                    localField: "serviceId",
+                },
+            },
+            {
+                $unwind: {
+                    path: "$serviceDetails",
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
+            {
+                $project: {
+                    _id: 1,
+                    description: 1,
+                    star: 1,
+                    images: 1,
+                    "user.name": 1,
+                    "serviceDetails.name": 1,
+                    "serviceDetails.description": 1,
+                    "serviceDetails.image_url": 1,
+                },
+            },
+        ]);
     }
 
-    // Return the computed stats
-    return sendResponse(res, 200, stats[0], "Ratings fetched successfully");
+    // Check if no stats are found
+    if (!stats) {
+        return sendResponse(
+            res,
+            404,
+            { ratings: [], stats: "No ratings found for this shop" },
+            "No ratings found for this shop",
+        );
+    }
+
+    // Return the computed stats and individual ratings
+    return sendResponse(
+        res,
+        200,
+        { stats, ratings },
+        "Ratings fetched successfully",
+    );
 });

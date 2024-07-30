@@ -30,4 +30,4 @@ const upload = multer({
 
 const multerUpload = upload.single("file");
 
-module.exports = { multerUpload };
+module.exports = { multerUpload,upload };

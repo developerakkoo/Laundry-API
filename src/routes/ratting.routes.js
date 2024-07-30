@@ -1,11 +1,12 @@
 const router = require("express").Router();
 const rattingController = require("../controllers/ratting.controller");
 const { isAuthenticated } = require("../middlewares/auth.middleware");
+const { upload } = require("../middlewares/fileHandler.middleware");
 
 /* Authorize access only */
 // router.use(isAuthenticated);
 
-router.post("/add", rattingController.addRatting);
+router.post("/add", upload.array("image", 5), rattingController.addRatting);
 
 router.put("/update", rattingController.updateRatting);
 
