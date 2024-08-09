@@ -94,7 +94,7 @@ exports.login = asyncHandler(async (req, res) => {
     const { phoneNumber } = req.body;
     const user = await partnerModel.findOne({ phoneNumber }); //.select("+password");
     if (!user) {
-        return sendResponse(res, 404, false, "User not found");
+        return sendResponse(res, 200, false, "User not found");
     }
     // const isMatch = await user.isPasswordCorrect(password);
     // if (!isMatch) {
@@ -907,28 +907,45 @@ exports.getPartnerDashData = asyncHandler(async (req, res) => {
                     _id: {
                         day: { $dayOfWeek: "$createdAt" },
                         year: { $year: "$createdAt" },
-                        week: { $week: "$createdAt" }
+                        week: { $week: "$createdAt" },
                     },
                     totalOrders: { $sum: 1 },
                     totalEarnings: { $sum: "$priceDetails.totalAmountToPay" },
                 },
             },
             {
-                $sort: { "_id.year": 1, "_id.week": 1, "_id.day": 1 }
-            }
+                $sort: { "_id.year": 1, "_id.week": 1, "_id.day": 1 },
+            },
         ]),
     ]);
 
     // Format results
-    const totalStatsResult = totalStats[0] || { totalOrders: 0, totalEarnings: 0 };
-    const currentMonthStatsResult = currentMonthStats[0] || { totalOrders: 0, totalEarnings: 0 };
+    const totalStatsResult = totalStats[0] || {
+        totalOrders: 0,
+        totalEarnings: 0,
+    };
+    const currentMonthStatsResult = currentMonthStats[0] || {
+        totalOrders: 0,
+        totalEarnings: 0,
+    };
 
-    // Process weekly data for Chart.js
-    const weeklyData = weeklyStats.map(stat => ({
-        day: moment().day(stat._id.day).format('dddd'), // Convert day number to day name
-        totalOrders: stat.totalOrders,
-        totalEarnings: stat.totalEarnings
+    // Generate days of the current week
+    const daysOfWeek = Array.from({ length: 7 }, (_, i) => ({
+        day: moment().startOf("week").add(i, "days").format("dddd"),
+        totalOrders: 0,
+        totalEarnings: 0,
     }));
+
+    // Map the weeklyStats to include days with zero orders and earnings
+    const weeklyData = weeklyStats.reduce((acc, stat) => {
+        const dayName = moment().day(stat._id.day).format("dddd");
+        const dayData = acc.find((d) => d.day === dayName);
+        if (dayData) {
+            dayData.totalOrders = stat.totalOrders;
+            dayData.totalEarnings = stat.totalEarnings;
+        }
+        return acc;
+    }, daysOfWeek);
 
     sendResponse(
         res,
@@ -936,8 +953,8 @@ exports.getPartnerDashData = asyncHandler(async (req, res) => {
         {
             totalStats: totalStatsResult,
             currentMonthStats: currentMonthStatsResult,
-            weeklyStats: weeklyData
+            weeklyStats: weeklyData,
         },
-        "Partner dashboard data fetched successfully"
+        "Partner dashboard data fetched successfully",
     );
 });
