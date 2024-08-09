@@ -86,4 +86,8 @@ router.get("/service/get-all", partnerController.getAllServices);
 
 router.delete("/service/delete/:id", partnerController.deleteService);
 
+/* Partner Dash  */
+
+router.get("/dashboard/stats", partnerController.getPartnerDashData);
+
 module.exports = { partnerRoutes: router };

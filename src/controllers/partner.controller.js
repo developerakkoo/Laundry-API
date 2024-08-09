@@ -61,14 +61,14 @@ exports.uploadPartnerDocuments = asyncHandler(async (req, res) => {
     });
     if (isExistDoc?.relativePath) deleteFile(isExistDoc?.relativePath);
 
-    const user = await partnerDocumentSchema.create({
+    const document = await partnerDocumentSchema.create({
         userId,
         documentType,
-        documentNumber,
+        // documentNumber,
         document_url,
         relativePath,
     });
-    return sendResponse(res, 200, user, "Document updated successfully");
+    return sendResponse(res, 200, document, "Document updated successfully");
 });
 
 exports.getDocumentsByPartnerId = asyncHandler(async (req, res) => {
@@ -851,4 +851,93 @@ exports.deleteService = asyncHandler(async (req, res) => {
     }
     if (service.relativePath) deleteFile(service?.relativePath);
     return sendResponse(res, 200, service._id, "Service deleted successfully");
+});
+
+const moment = require("moment");
+const Order = require("../models/order.model");
+exports.getPartnerDashData = asyncHandler(async (req, res) => {
+    const shopId = req.query.shopId;
+
+    if (!shopId) {
+        return sendResponse(res, 400, null, "shopId is required");
+    }
+
+    const startOfMonth = moment().startOf("month").toDate();
+    const endOfMonth = moment().endOf("month").toDate();
+
+    const startOfWeek = moment().startOf("week").toDate();
+    const endOfWeek = moment().endOf("week").toDate();
+
+    // Create an array of promises
+    const [totalStats, currentMonthStats, weeklyStats] = await Promise.all([
+        Order.aggregate([
+            { $match: { shopId: new ObjectId(shopId) } },
+            {
+                $group: {
+                    _id: "$shopId",
+                    totalOrders: { $sum: 1 },
+                    totalEarnings: { $sum: "$priceDetails.totalAmountToPay" },
+                },
+            },
+        ]),
+        Order.aggregate([
+            {
+                $match: {
+                    shopId: new ObjectId(shopId),
+                    createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+                },
+            },
+            {
+                $group: {
+                    _id: "$shopId",
+                    totalOrders: { $sum: 1 },
+                    totalEarnings: { $sum: "$priceDetails.totalAmountToPay" },
+                },
+            },
+        ]),
+        Order.aggregate([
+            {
+                $match: {
+                    shopId: new ObjectId(shopId),
+                    createdAt: { $gte: startOfWeek, $lte: endOfWeek },
+                },
+            },
+            {
+                $group: {
+                    _id: {
+                        day: { $dayOfWeek: "$createdAt" },
+                        year: { $year: "$createdAt" },
+                        week: { $week: "$createdAt" }
+                    },
+                    totalOrders: { $sum: 1 },
+                    totalEarnings: { $sum: "$priceDetails.totalAmountToPay" },
+                },
+            },
+            {
+                $sort: { "_id.year": 1, "_id.week": 1, "_id.day": 1 }
+            }
+        ]),
+    ]);
+
+    // Format results
+    const totalStatsResult = totalStats[0] || { totalOrders: 0, totalEarnings: 0 };
+    const currentMonthStatsResult = currentMonthStats[0] || { totalOrders: 0, totalEarnings: 0 };
+
+    // Process weekly data for Chart.js
+    const weeklyData = weeklyStats.map(stat => ({
+        day: moment().day(stat._id.day).format('dddd'), // Convert day number to day name
+        totalOrders: stat.totalOrders,
+        totalEarnings: stat.totalEarnings
+    }));
+
+    sendResponse(
+        res,
+        200,
+        {
+            totalStats: totalStatsResult,
+            currentMonthStats: currentMonthStatsResult,
+            weeklyStats: weeklyData
+        },
+        "Partner dashboard data fetched successfully"
+    );
 });

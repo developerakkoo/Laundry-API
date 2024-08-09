@@ -15,7 +15,7 @@ const partnerDocumentSchema = new Schema(
         },
         documentNumber: {
             type: String,
-            required: true,
+            // required: true,
         },
         document_url: {
             type: String,
