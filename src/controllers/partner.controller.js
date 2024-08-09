@@ -94,7 +94,12 @@ exports.login = asyncHandler(async (req, res) => {
     const { phoneNumber } = req.body;
     const user = await partnerModel.findOne({ phoneNumber }); //.select("+password");
     if (!user) {
-        return sendResponse(res, 200, false, "User not found");
+        return sendResponse(
+            res,
+            200,
+            { isRegistered: false },
+            "User not found",
+        );
     }
     // const isMatch = await user.isPasswordCorrect(password);
     // if (!isMatch) {
@@ -112,7 +117,12 @@ exports.login = asyncHandler(async (req, res) => {
         .json(
             new apiResponse(
                 200,
-                { userId: user._id, accessToken, refreshToken },
+                {
+                    isRegistered: true,
+                    userId: user._id,
+                    accessToken,
+                    refreshToken,
+                },
                 "User login successful, Welcome back",
             ),
         );
