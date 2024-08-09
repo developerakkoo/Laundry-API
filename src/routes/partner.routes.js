@@ -3,9 +3,26 @@ const { isAuthenticated } = require("../middlewares/auth.middleware");
 const { multerUpload } = require("../middlewares/fileHandler.middleware");
 const router = require("express").Router();
 
-router.post("/register", partnerController.registerUser);
+router.post(
+    "/register",
+    partnerController.registerUser, // fist create partner and
+    partnerController.createShope, //  then using partner id create the shop
+);
 
 router.post("/login", partnerController.login);
+
+router.post(
+    "/document/upload",
+    multerUpload,
+    partnerController.uploadPartnerDocuments,
+);
+
+router.get(
+    "/documents/getall/:userId",
+    partnerController.getDocumentsByPartnerId,
+);
+
+router.get("/document/:id", partnerController.getPartnerDocumentId);
 
 router.post(
     "/upload-image",

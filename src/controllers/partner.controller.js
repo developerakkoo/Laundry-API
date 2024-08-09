@@ -1,4 +1,5 @@
 const partnerModel = require("../models/partner.model");
+const partnerDocumentSchema = require("../models/partnerDocument.model");
 const shopeModel = require("../models/shope.model");
 const servicesModel = require("../models/services.model");
 const Favorite = require("../models/favorite.model");
@@ -13,8 +14,8 @@ const {
 } = require("../utils/helper.utils");
 const { cookieOptions } = require("../constant");
 
-exports.registerUser = asyncHandler(async (req, res) => {
-    const { name, email, phoneNumber, password } = req.body;
+exports.registerUser = asyncHandler(async (req, res, next) => {
+    const { name, email, phoneNumber } = req.body;
     const isExistUser = await partnerModel.findOne({
         $or: [{ email }, { phoneNumber }],
     });
@@ -24,26 +25,76 @@ exports.registerUser = asyncHandler(async (req, res) => {
     const user = await partnerModel.create({
         name,
         email,
-        password,
         phoneNumber,
     });
-    const newUser = await partnerModel.findById(user._id);
-    if (!newUser) {
-        return sendResponse(
-            res,
-            400,
-            null,
-            "Something went wrong while registering the user",
-        );
+    // const newUser = await partnerModel.findById(user._id);
+    // if (!newUser) {
+    //     return sendResponse(
+    //         res,
+    //         400,
+    //         null,
+    //         "Something went wrong while registering the user",
+    //     );
+    // }
+    // return sendResponse(res, 201, "newUser", "User created successfully");
+    req.body.partnerId = user._id;
+    next();
+});
+
+exports.uploadPartnerDocuments = asyncHandler(async (req, res) => {
+    const { userId, documentType, documentNumber } = req.body;
+
+    const isExistUser = await partnerModel.findById(userId);
+    if (!isExistUser) {
+        return sendResponse(res, 404, null, "User not found");
     }
-    return sendResponse(res, 201, newUser, "User created successfully");
+    const { filename } = req.file;
+    const relativePath = `uploads/${filename}`;
+    let document_url = `${req.protocol}://${req.hostname}/uploads/${filename}`;
+    if (process.env.NODE_ENV !== "PROD") {
+        document_url = `${req.protocol}://${req.hostname}:3000/uploads/${filename}`;
+    }
+
+    const isExistDoc = partnerDocumentSchema.findOne({
+        userId,
+        documentType,
+    });
+    if (isExistDoc?.relativePath) deleteFile(isExistDoc?.relativePath);
+
+    const user = await partnerDocumentSchema.create({
+        userId,
+        documentType,
+        documentNumber,
+        document_url,
+        relativePath,
+    });
+    return sendResponse(res, 200, user, "Document updated successfully");
+});
+
+exports.getDocumentsByPartnerId = asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+    const user = await partnerDocumentSchema.findOne({
+        userId,
+    });
+    if (!user) {
+        return sendResponse(res, 404, null, "User not found");
+    }
+    return sendResponse(res, 200, user, "Document fetched successfully");
+});
+
+exports.getPartnerDocumentId = asyncHandler(async (req, res) => {
+    const document = await partnerDocumentSchema.findById(req.params.id);
+    if (!document) {
+        return sendResponse(res, 404, null, "User not found");
+    }
+    return sendResponse(res, 200, document, "Document fetched successfully");
 });
 
 exports.login = asyncHandler(async (req, res) => {
     const { phoneNumber } = req.body;
     const user = await partnerModel.findOne({ phoneNumber }); //.select("+password");
     if (!user) {
-        return sendResponse(res, 404, null, "User not found");
+        return sendResponse(res, 404, false, "User not found");
     }
     // const isMatch = await user.isPasswordCorrect(password);
     // if (!isMatch) {
@@ -224,7 +275,7 @@ exports.getAllPartner = asyncHandler(async (req, res) => {
 /***** Shope *****/
 exports.createShope = asyncHandler(async (req, res) => {
     const {
-        name,
+        shopeName,
         address,
         partnerId,
         category,
@@ -238,12 +289,12 @@ exports.createShope = asyncHandler(async (req, res) => {
     if (!partner) {
         return sendResponse(res, 404, null, "User not found");
     }
-    const shopeExistWithName = await shopeModel.findOne({ name });
+    const shopeExistWithName = await shopeModel.findOne({ name: shopeName });
     if (shopeExistWithName) {
         return sendResponse(res, 404, null, "Shope already exists this name");
     }
     const shope = await shopeModel.create({
-        name,
+        name: shopeName,
         address,
         category,
         shopTimeTable,
@@ -370,8 +421,7 @@ exports.getAllShope = asyncHandler(async (req, res) => {
     );
 });
 
-
-const axios = require('axios'); // Ensure axios is installed
+const axios = require("axios");
 
 exports.getShopeByCategoryId = asyncHandler(async (req, res) => {
     const { latitude, longitude, categoryId, userId } = req.body;
@@ -435,15 +485,21 @@ exports.getShopeByCategoryId = asyncHandler(async (req, res) => {
     // Calculate road distances
     const apiKey = process.env.GOOGLE_MAPS_API_KEY; // Replace with your Google Maps API key
     const origins = [`${latitude},${longitude}`];
-    const destinations = shops.map(shop => `${shop.location.coordinates[1]},${shop.location.coordinates[0]}`);
+    const destinations = shops.map(
+        (shop) =>
+            `${shop.location.coordinates[1]},${shop.location.coordinates[0]}`,
+    );
 
-    const response = await axios.get('https://maps.googleapis.com/maps/api/distancematrix/json', {
-        params: {
-            origins: origins.join('|'),
-            destinations: destinations.join('|'),
-            key: apiKey,
+    const response = await axios.get(
+        "https://maps.googleapis.com/maps/api/distancematrix/json",
+        {
+            params: {
+                origins: origins.join("|"),
+                destinations: destinations.join("|"),
+                key: apiKey,
+            },
         },
-    });
+    );
 
     const distanceMatrix = response.data;
 

@@ -19,18 +19,15 @@ const partnerSchema = new Schema(
         email: {
             type: String,
             required: true,
-            unique: true,
             default: "_",
         },
         phoneNumber: {
             type: String,
             required: true,
-            unique: true,
             default: "_",
         },
         password: {
             type: String,
-            required: true,
             select: false,
         },
         status: {

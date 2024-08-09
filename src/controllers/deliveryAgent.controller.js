@@ -48,7 +48,7 @@ exports.register = asyncHandler(async (req, res) => {
 });
 
 exports.login = asyncHandler(async (req, res) => {
-    const { email, phoneNumber, password } = req.body;
+    const { phoneNumber } = req.body;
     const deliveryAgent = await deliveryAgentModel
         .findOne({ phoneNumber })
         .select("+password");
