@@ -395,7 +395,7 @@ exports.assignDeliveryBoyToOrder = asyncHandler(async (req, res) => {
         });
         //send notification to pickup agent
         sendNotification(
-            orderDeliveryAgentId,
+            orderPickupAgentId,
             "Order Assign To You For Pickup",
             order,
         );
