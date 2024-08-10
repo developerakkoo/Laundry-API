@@ -46,9 +46,7 @@ exports.getMyChatList = asyncHandler(async (req, res) => {
 
     return res
         .status(200)
-        .json(
-            new apiResponse(200, data, responseMessage.GET_CHAT_LIST_SUCCESS),
-        );
+        .json(new apiResponse(200, data, "GET_CHAT_LIST_SUCCESS"));
 });
 
 exports.sendMessage = asyncHandler(async (req, res) => {
@@ -63,7 +61,7 @@ exports.sendMessage = asyncHandler(async (req, res) => {
     sendNotification(receiverId, "New Message", newMessage);
     return res
         .status(201)
-        .json(new apiResponse(201, newMessage, responseMessage.Message_SENT));
+        .json(new apiResponse(201, newMessage, "Message_SENT"));
 });
 
 exports.sendMultimediaMessage = asyncHandler(async (req, res) => {
@@ -91,7 +89,7 @@ exports.sendMultimediaMessage = asyncHandler(async (req, res) => {
 
     return res
         .status(201)
-        .json(new apiResponse(201, newMessage, responseMessage.Message_SENT));
+        .json(new apiResponse(201, newMessage, "Message_SENT"));
 });
 
 exports.checkChatExist = asyncHandler(async (req, res, next) => {
@@ -119,17 +117,11 @@ exports.getMessageById = asyncHandler(async (req, res) => {
     const { MessageId } = req.params;
     const Message = await Message.findById(MessageId);
     if (!Message) {
-        throw new ApiError(404, responseMessage.Message_NOT_FOUND);
+        throw new apiError(404, "Message_NOT_FOUND");
     }
     return res
         .status(200)
-        .json(
-            new apiResponse(
-                200,
-                Message,
-                responseMessage.Message_FETCHED_SUCCESSFULLY,
-            ),
-        );
+        .json(new apiResponse(200, Message, "Message_FETCHED_SUCCESSFULLY"));
 });
 
 exports.getAllMessageByUserId = asyncHandler(async (req, res) => {
@@ -144,24 +136,18 @@ exports.getAllMessageByUserId = asyncHandler(async (req, res) => {
     }
     const Messages = await Message.find(query).sort({ createdAt: 1 });
     if (!Messages) {
-        throw new ApiError(404, responseMessage.Message_NOT_FOUND);
+        throw new apiError(404, "Message_NOT_FOUND");
     }
     return res
         .status(200)
-        .json(
-            new apiResponse(
-                200,
-                Messages,
-                responseMessage.Message_FETCHED_SUCCESSFULLY,
-            ),
-        );
+        .json(new apiResponse(200, Messages, "Message_FETCHED_SUCCESSFULLY"));
 });
 
 exports.markAsRead = asyncHandler(async (req, res) => {
     const { MessageId } = req.params;
     const Message = await Message.findById(MessageId);
     if (!Message) {
-        throw new ApiError(404, responseMessage.Message_NOT_FOUND);
+        throw new apiError(404, "Message_NOT_FOUND");
     }
     const updatedMessage = await Message.findByIdAndUpdate(
         MessageId,
@@ -174,7 +160,7 @@ exports.markAsRead = asyncHandler(async (req, res) => {
             new apiResponse(
                 200,
                 updatedMessage,
-                responseMessage.Message_MARKED_AS_READ_SUCCESSFULLY,
+                "Message_MARKED_AS_READ_SUCCESSFULLY",
             ),
         );
 });
@@ -183,7 +169,7 @@ exports.deleteMessageById = asyncHandler(async (req, res) => {
     const { MessageId } = req.params;
     const Message = await Message.findById(MessageId);
     if (!Message) {
-        throw new ApiError(404, responseMessage.Message_NOT_FOUND);
+        throw new apiError(404, "Message_NOT_FOUND");
     }
     if (Message.isImage === true) {
         deleteFile(Message.local_filePath);
@@ -191,13 +177,7 @@ exports.deleteMessageById = asyncHandler(async (req, res) => {
     await Message.deleteOne();
     return res
         .status(200)
-        .json(
-            new apiResponse(
-                200,
-                null,
-                responseMessage.Message_DELETED_SUCCESSFULLY,
-            ),
-        );
+        .json(new apiResponse(200, null, "Message_DELETED_SUCCESSFULLY"));
 });
 
 exports.getMessageByChatId = asyncHandler(async (req, res) => {
@@ -205,7 +185,7 @@ exports.getMessageByChatId = asyncHandler(async (req, res) => {
 
     const messages = await Message.find({ chatId }).sort({ createdAt: 1 });
     if (!messages) {
-        throw new ApiError(404, "MESSAGE_NOT_FOUND");
+        throw new apiError(404, "MESSAGE_NOT_FOUND");
     }
     return res
         .status(200)
