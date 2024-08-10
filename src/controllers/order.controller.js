@@ -343,7 +343,7 @@ exports.verifyOtpAndUpdateOrderStatus = asyncHandler(async (req, res) => {
     }
     if (otpType == 1) {
         if (savedOrder.dropOtp != otp) {
-            return sendResponse(res, 400, null, `Stop Otp Already Generated`);
+            return sendResponse(res, 400, null, `Invalid Otp`);
         }
         savedOrder.status == 7;
         savedOrder.orderTimeline.push({
