@@ -345,7 +345,7 @@ exports.verifyOtpAndUpdateOrderStatus = asyncHandler(async (req, res) => {
         if (savedOrder.dropOtp != otp) {
             return sendResponse(res, 400, null, `Invalid Otp`);
         }
-        savedOrder.status == 7;
+        savedOrder.status = 7;
         savedOrder.orderTimeline.push({
             title: "Order Delivered",
             status: "ORDER_DELIVERED",
