@@ -50,7 +50,7 @@ exports.uploadPartnerDocuments = asyncHandler(async (req, res) => {
     }
     const { filename } = req.file;
     const relativePath = `uploads/${filename}`;
-    let document_url = `${req.protocol}://${req.hostname}/uploads/${filename}`;
+    let document_url = `https://${req.hostname}/uploads/${filename}`;
     if (process.env.NODE_ENV !== "PROD") {
         document_url = `${req.protocol}://${req.hostname}:3000/uploads/${filename}`;
     }

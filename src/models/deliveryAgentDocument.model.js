@@ -13,10 +13,10 @@ const deliveryAgentDocumentSchema = new Schema(
             required: true,
             enum: [11, 22, 33], //"ADHAR","PAN","LC"
         },
-        documentNumber: {
-            type: String,
-            required: true,
-        },
+        // documentNumber: {
+        //     type: String,
+        //     required: true,
+        // },
         document_url: {
             type: String,
             required: true,
