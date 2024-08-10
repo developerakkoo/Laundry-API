@@ -445,7 +445,7 @@ exports.changeOrderStatus = asyncHandler(async (req, res) => {
     if (!order) {
         return sendResponse(res, 404, null, "Order not found");
     }
-    if (status == 2) {
+    if (status == 1) {
         order.orderTimeline.push({
             title: "Order Confirmed",
             status: "ORDER_CONFIRMED",
