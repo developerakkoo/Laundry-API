@@ -14,6 +14,11 @@ router.put(
 );
 
 router.put(
+    "/update/profile",
+    deliveryAgentController.updateDeliveryAgent,
+);
+
+router.put(
     "/update/delivery-agent/document",
     multerUpload,
     deliveryAgentController.uploadDocument,
@@ -23,8 +28,6 @@ router.put(
 // router.use(isAuthenticated);
 
 router.get("/logout", deliveryAgentController.logout);
-
-router.get("/get-current-user", deliveryAgentController.getCurrentUser);
 
 router.post("/add/ratting", deliveryAgentController.addRattingToDeliveryAgent);
 

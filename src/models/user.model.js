@@ -31,6 +31,17 @@ const userSchema = new Schema(
             default: null,
             select: false,
         },
+        isOnline: {
+            type: Boolean,
+            required: true,
+            default: false,
+        },
+        status: {
+            type: Number,
+            required: true,
+            default: 0, // default
+            enum: [0, 1], //  1= block
+        },
     },
     { timestamps: true },
 );

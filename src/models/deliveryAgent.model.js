@@ -41,6 +41,11 @@ const deliveryAgent = new Schema(
         message: {
             type: String, ///if admin rejected or block the delivery bot then provide message of rejection or block
         },
+        isOnline: {
+            type: Boolean,
+            required: true,
+            default: false,
+        },
         status: {
             type: Number,
             required: true,

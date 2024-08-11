@@ -258,7 +258,7 @@ exports.getAllDeliveryAgent = asyncHandler(async (req, res) => {
 });
 
 exports.updateDeliveryAgent = asyncHandler(async (req, res) => {
-    const { name, email, phoneNumber, status, userId } = req.body;
+    const { name, email, phoneNumber, status, userId, isOnline } = req.body;
     const isExistUser = await deliveryAgentModel.findById(userId);
     if (!isExistUser) {
         return sendResponse(res, 404, null, "User not found");
@@ -271,6 +271,7 @@ exports.updateDeliveryAgent = asyncHandler(async (req, res) => {
                 email,
                 phoneNumber,
                 status,
+                isOnline,
             },
         },
         {

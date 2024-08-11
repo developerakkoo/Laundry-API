@@ -242,7 +242,7 @@ exports.deletePartnerById = asyncHandler(async (req, res) => {
 
 exports.getAllPartner = asyncHandler(async (req, res) => {
     let dbQuery = {};
-    const { search } = req.query;
+    const { search, status } = req.query;
     const pageNumber = parseInt(req.query.page) || 1;
     const pageSize = parseInt(req.query.pageSize) || 10;
     const skip = (pageNumber - 1) * pageSize;
@@ -254,6 +254,10 @@ exports.getAllPartner = asyncHandler(async (req, res) => {
             { name: { $regex: searchRegex } },
             { name: { $regex: searchRegex } },
         ];
+    }
+
+    if (status) {
+        dbQuery.status = Number(status);
     }
 
     const dataCount = await partnerModel.countDocuments(dbQuery);

@@ -218,6 +218,7 @@ exports.getCashbackOfferById = asyncHandler(async (req, res) => {
 exports.getDashboardStats = asyncHandler(async (req, res) => {
     const [
         totalUser,
+        totalOnlineUser,
         totalPartner,
         totalDeliveryBoy,
         totalOrders,
@@ -228,6 +229,7 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
         totalServices,
     ] = await Promise.all([
         userModel.countDocuments(),
+        userModel.countDocuments({ isOnline: true }),
         partnerModel.countDocuments(),
         deliveryAgentModel.countDocuments(),
         orderModel.countDocuments(),
@@ -242,6 +244,7 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
         200,
         {
             totalUser,
+            totalOnlineUser,
             totalPartner,
             totalDeliveryBoy,
             totalOrders,
@@ -489,12 +492,18 @@ exports.createBanner = asyncHandler(async (req, res) => {
     const banner = await bannerModel.create({
         image_url,
         local_image_url,
+        type: req.body.type,
     });
     sendResponse(res, 201, banner, "Banner created successfully");
 });
 
 exports.getAllBanners = asyncHandler(async (req, res) => {
-    const banners = await bannerModel.find();
+    const { type } = req.query;
+    let dbQuery = {};
+    if (type) {
+        dbQuery.type = type;
+    }
+    const banners = await bannerModel.find(dbQuery);
     if (banners.length === 0) {
         return sendResponse(res, 404, null, "Banners not found");
     }
@@ -509,4 +518,51 @@ exports.deleteBanner = asyncHandler(async (req, res) => {
     }
     if (banner.local_image_url) deleteFile(banner?.local_image_url);
     sendResponse(res, 200, banner._id, "Banner deleted successfully");
+});
+
+/* Video Controller */
+
+const videoAddModel = require("../models/videoAdd.model");
+exports.addVideos = asyncHandler(async (req, res) => {
+    if (!req.files || req.files.length === 0) {
+        return sendResponse(res, 400, null, "No files were uploaded");
+    }
+    const videoData = req.files.map((video) =>
+        videoAddModel.create({
+            videoId: uuidV4().toUpperCase(),
+            videoUrl: `https://${req.hostname}/upload/${video.filename}`,
+            video_local_url: `upload/${video.filename}`,
+        }),
+    );
+    const data = await Promise.all(videoData);
+    sendResponse(res, 200, data, "Video uploaded successfully");
+});
+
+exports.deleteVideo = asyncHandler(async (req, res) => {
+    const { videoId } = req.params;
+    const video = await videoAddModel.findByIdAndDelete(videoId);
+    if (!video) {
+        return sendResponse(res, 404, null, "Video not found");
+    }
+
+    deleteFile(video.video_local_url);
+
+    sendResponse(res, 200, video, "Video deleted successfully");
+});
+
+exports.getAllVideos = asyncHandler(async (req, res) => {
+    const videos = await videoAddModel.find();
+    if (videos.length === 0) {
+        return sendResponse(res, 404, null, "No videos found");
+    }
+    sendResponse(res, 200, videos, "All videos fetched successfully");
+});
+
+exports.getVideoById = asyncHandler(async (req, res) => {
+    const { videoId } = req.params;
+    const video = await videoAddModel.findById(videoId);
+    if (!video) {
+        return sendResponse(res, 404, null, "Video not found");
+    }
+    sendResponse(res, 200, video, "Video fetched successfully");
 });

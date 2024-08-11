@@ -2,7 +2,10 @@ const router = require("express").Router();
 const adminController = require("../controllers/admin.controller");
 const categoryController = require("../controllers/category.controller");
 const { isAuthenticated } = require("../middlewares/auth.middleware");
-const { multerUpload } = require("../middlewares/fileHandler.middleware");
+const {
+    multerUpload,
+    upload,
+} = require("../middlewares/fileHandler.middleware");
 const promoCodeController = require("../controllers/promoCode.controller");
 const {
     getAllUser,
@@ -334,10 +337,24 @@ router.delete(
 
 /* Banner Routes */
 
-router.post("/banner/add", adminController.createBanner);
+router.post("/banner/add", multerUpload, adminController.createBanner);
 
 router.get("/banner/get-all", adminController.getAllBanners);
 
 router.get("/banner/delete/:id", adminController.deleteBanner);
+
+/* Video add routes */
+
+router.post(
+    "/video/upload",
+    upload.array("video", 5),
+    adminController.addVideos,
+);
+
+router.get("/video/get/:videoId", adminController.getVideoById);
+
+router.get("/video/all", adminController.getAllVideos);
+
+router.delete("/video/delete/:videoId", adminController.deleteVideo);
 
 module.exports = { adminRoutes: router };

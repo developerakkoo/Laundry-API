@@ -91,7 +91,8 @@ exports.logout = asyncHandler(async (req, res) => {
 });
 
 exports.updateUser = asyncHandler(async (req, res) => {
-    const { name, email, phoneNumber, firebaseToken } = req.body;
+    const { name, email, phoneNumber, firebaseToken, status, isOnline } =
+        req.body;
     const user = await User.findByIdAndUpdate(
         req.user._id || req.query.userId,
         {
@@ -100,6 +101,8 @@ exports.updateUser = asyncHandler(async (req, res) => {
                 email,
                 phoneNumber,
                 firebaseToken,
+                isOnline,
+                status,
             },
         },
         { new: true },
@@ -163,7 +166,7 @@ exports.getUserById = asyncHandler(async (req, res) => {
 
 exports.getAllUser = asyncHandler(async (req, res) => {
     let dbQuery = {};
-    const { search, sub } = req.query;
+    const { search, sub, status } = req.query;
     const pageNumber = parseInt(req.query.page) || 1;
     const pageSize = parseInt(req.query.pageSize) || 10;
     const skip = (pageNumber - 1) * pageSize;
@@ -174,6 +177,9 @@ exports.getAllUser = asyncHandler(async (req, res) => {
         dbQuery = {
             $or: [{ name: searchRegex }, { name: searchRegex }],
         };
+    }
+    if (status) {
+        dbQuery.status = Number(status);
     }
 
     // Aggregate pipeline

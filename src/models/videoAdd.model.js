@@ -1,24 +1,21 @@
 const { Schema, model } = require("mongoose");
 
-const bannerSchema = new Schema(
+const videoAddSchema = new Schema(
     {
-        image_url: {
+        videoId: {
             type: String,
             required: true,
         },
-        local_image_url: {
+        videoUrl: {
             type: String,
             required: true,
         },
-        type: {
-            type: Number,
+        video_local_url: {
+            type: String,
             required: true,
-            default: 0,
-            enum: [0, 1, 2, 3], // home, cart, fav, profile
         },
     },
     { timestamps: true },
 );
 
-module.exports = model("Banner", bannerSchema);
-s;
+module.exports = model("VideoAdd", videoAddSchema);

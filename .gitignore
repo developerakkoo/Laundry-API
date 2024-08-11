@@ -3,6 +3,8 @@
 .env.test
 .env.production
 
+firebase.json
+
 # Logs
 logs
 *.log
