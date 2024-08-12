@@ -29,6 +29,7 @@ const {
 } = require("../utils/wallet.utils");
 const moment = require("moment");
 const { sendNotification } = require("./notification.controller");
+const { getIO } = require("../utils/socket");
 
 exports.calculateAmountToPay = asyncHandler(async (req, res) => {
     const data = await dataModel.find();
@@ -277,9 +278,11 @@ exports.createOrder = asyncHandler(async (req, res) => {
     const shop = await shopModel.findById(cart.shopId);
     //check order type is express or not based on that send notification
     if (orderType === 1) {
-        sendNotification(shop.ownerId, "New Express Order", order);
+        sendNotification(shop.partnerId, "New Express Order", order);
+        getIO().emit(shop.partnerId, order);
     } else {
         sendNotification(shop.partnerId, "New Order", order);
+        getIO().emit(shop.partnerId, order);
     }
 
     // Clear the cart after placing the order
@@ -400,6 +403,7 @@ exports.assignDeliveryBoyToOrder = asyncHandler(async (req, res) => {
             order,
         );
         order.status = 2;
+        getIO().emit(orderPickupAgentId, order);
     }
     if (orderDeliveryAgentId) {
         const deliveryBoy = await DeliveryBoy.findById(orderDeliveryAgentId);
@@ -431,6 +435,7 @@ exports.assignDeliveryBoyToOrder = asyncHandler(async (req, res) => {
             "Order Assign To You For Delivery",
             order,
         );
+        getIO().emit(orderDeliveryAgentId, order);
     }
     await order.save();
 
@@ -571,12 +576,36 @@ exports.getAllOrders = asyncHandler(async (req, res) => {
     if (populate) {
         orders = await Order.find(dbQuery)
             .populate({
+                path: "userId",
+                select: "name phoneNumber email",
+            })
+            .populate({
                 path: "shopId",
                 select: "image name address partnerId",
+                populate: {
+                    path: "partnerId",
+                    select: "name phoneNumber email",
+                },
             })
             .populate({
                 path: "items.item",
                 select: "name price description categoryId image_url",
+            })
+            .populate({
+                path: "pickupAddress",
+                select: "type address landmark pinCode",
+            })
+            .populate({
+                path: "dropoffAddress",
+                select: "type address landmark pinCode",
+            })
+            .populate({
+                path: "orderPickupAgentId",
+                select: "name phoneNumber email",
+            })
+            .populate({
+                path: "orderDeliveryAgentId",
+                select: "name phoneNumber email",
             });
     } else {
         orders = await Order.find(dbQuery);
@@ -704,5 +733,19 @@ exports.getOrdersByShopeId = asyncHandler(async (req, res) => {
             totalDoc: dataCount,
         },
         "Orders fetched successfully",
+    );
+});
+
+//bulk delete
+exports.bulkDelete = asyncHandler(async (req, res) => {
+    // Delete all orders
+    const result = await Order.deleteMany({});
+
+    // Return the number of deleted documents
+    sendResponse(
+        res,
+        200,
+        result.deletedCount,
+        "All orders deleted successfully",
     );
 });

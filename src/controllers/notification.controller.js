@@ -4,13 +4,15 @@ const {
     asyncHandler,
     sendResponse,
 } = require("../utils/helper.utils");
-
+const { sendFirebaseNotification } = require("../utils/firebaseNotifier.utils");
 const { getIO } = require("../utils/socket");
+const userModel = require("../models/user.model");
 
 exports.sendNotification = async (
     userId,
     title = "New Notification",
     content,
+    role = 0,
 ) => {
     try {
         const notification = await Notification.create({
@@ -19,6 +21,16 @@ exports.sendNotification = async (
             content,
         });
         getIO().emit(userId, notification);
+        if (role == 1) {
+            const user = await userModel.findById(userId);
+            if (user && user?.firebaseToken) {
+                await sendFirebaseNotification(
+                    [user.firebaseToken],
+                    "New Message",
+                    "New Message From Admin",
+                );
+            }
+        }
     } catch (error) {
         console.log(error.message);
     }

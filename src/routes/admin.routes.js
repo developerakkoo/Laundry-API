@@ -24,6 +24,7 @@ const {
     completeOrder,
     changeOrderStatus,
     assignDeliveryBoyToOrder,
+    bulkDelete,
 } = require("../controllers/order.controller");
 const {
     userPermission,
@@ -226,21 +227,23 @@ router.delete(
 
 /***** Order Routes *****/
 
-router.put("/:orderId/complete", orderPermission, changeOrderStatus);
+router.put("/order/:orderId/complete", orderPermission, changeOrderStatus);
 
 router.put(
-    "/:orderId/assignDeliveryBoy/:deliveryBoyId",
+    "/order/:orderId/assignDeliveryBoy/:deliveryBoyId",
     orderPermission,
     assignDeliveryBoyToOrder,
 );
 
 router.put(
-    "/:orderId/changeStatus/:status",
+    "/order/:orderId/changeStatus/:status",
     orderPermission,
     changeOrderStatus,
 );
 
-router.get("/get", orderPermission, getAllOrders);
+router.get("/order/get", orderPermission, getAllOrders);
+
+router.delete("/order/delete-data", bulkDelete);
 
 /***** cashback routes *****/
 
@@ -356,5 +359,12 @@ router.get("/video/get/:videoId", adminController.getVideoById);
 router.get("/video/all", adminController.getAllVideos);
 
 router.delete("/video/delete/:videoId", adminController.deleteVideo);
+
+/* send custom firebase notification to users */
+
+router.post(
+    "/send-notification",
+    adminController.sendCustomFirebaseNotification,
+);
 
 module.exports = { adminRoutes: router };

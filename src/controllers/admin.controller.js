@@ -215,7 +215,18 @@ exports.getCashbackOfferById = asyncHandler(async (req, res) => {
 });
 
 /***** Admin Dash *****/
+const moment = require("moment");
 exports.getDashboardStats = asyncHandler(async (req, res) => {
+    const { startDate, endDate } = req.query;
+
+    let filter;
+    if (startDate && endDate) {
+        const start = moment(startDate, "DD-MM-YYYY").startOf("day").toDate();
+        const end = moment(endDate, "DD-MM-YYYY").endOf("day").toDate();
+
+        filter = { createdAt: { $gte: start, $lte: end } };
+    }
+
     const [
         totalUser,
         totalOnlineUser,
@@ -228,17 +239,18 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
         totalShops,
         totalServices,
     ] = await Promise.all([
-        userModel.countDocuments(),
-        userModel.countDocuments({ isOnline: true }),
-        partnerModel.countDocuments(),
-        deliveryAgentModel.countDocuments(),
-        orderModel.countDocuments(),
-        orderModel.countDocuments({ status: "In-Process" }),
-        orderModel.countDocuments({ status: "Completed" }),
-        orderModel.countDocuments({ status: "Cancelled" }),
-        shopModel.countDocuments(),
-        servicesModel.countDocuments(),
+        userModel.countDocuments(filter),
+        userModel.countDocuments({ isOnline: true, ...filter }),
+        partnerModel.countDocuments(filter),
+        deliveryAgentModel.countDocuments(filter),
+        orderModel.countDocuments(filter),
+        orderModel.countDocuments({ status: 4, ...filter }),
+        orderModel.countDocuments({ status: 7, ...filter }),
+        orderModel.countDocuments({ status: 8, ...filter }),
+        shopModel.countDocuments(filter),
+        servicesModel.countDocuments(filter),
     ]);
+
     return sendResponse(
         res,
         200,
@@ -565,4 +577,14 @@ exports.getVideoById = asyncHandler(async (req, res) => {
         return sendResponse(res, 404, null, "Video not found");
     }
     sendResponse(res, 200, video, "Video fetched successfully");
+});
+
+const { sendFirebaseNotification } = require("../utils/firebaseNotifier.utils");
+exports.sendCustomFirebaseNotification = asyncHandler(async (req, res) => {
+    const { title, body, tokens } = req.body;
+    if (!tokens || tokens.length === 0) {
+        return sendResponse(res, 400, null, "No tokens provided");
+    }
+    const data = await sendFirebaseNotification(tokens, title, body);
+    sendResponse(res, 200, data, "Firebase notification sent successfully");
 });

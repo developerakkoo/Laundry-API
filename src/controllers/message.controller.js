@@ -55,10 +55,11 @@ exports.sendMessage = asyncHandler(async (req, res) => {
         senderId,
         orderId,
         receiverId,
+        role,
         message,
         chatId,
     });
-    sendNotification(receiverId, "New Message", newMessage);
+    sendNotification(receiverId, "New Message", newMessage,role);
     return res
         .status(201)
         .json(new apiResponse(201, newMessage, "Message_SENT"));

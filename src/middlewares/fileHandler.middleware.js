@@ -19,15 +19,27 @@ const upload = multer({
     },
     fileFilter: function (req, file, cb) {
         // Validate file types
-        const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
+        const allowedTypes = [
+            "image/jpeg",
+            "image/png",
+            "image/jpg",
+            "video/mp4",
+            "video/webm",
+            "video/ogg",
+            "video/x-matroska",
+        ];
         if (allowedTypes.includes(file.mimetype)) {
             cb(null, true);
         } else {
-            cb(new Error("Only JPEG, PNG, and JPG images are allowed."));
+            cb(
+                new Error(
+                    "Only JPEG, PNG,JPG for images and mp4, webm, mkv for videos are allowed.",
+                ),
+            );
         }
     },
 });
 
 const multerUpload = upload.single("file");
 
-module.exports = { multerUpload,upload };
+module.exports = { multerUpload, upload };

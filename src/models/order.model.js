@@ -27,12 +27,12 @@ const orderSchema = new Schema(
             },
         ],
         pickupAddress: {
-            //id
-            type: String,
+            type: Schema.Types.ObjectId,
+            ref: "UserAddress",
         },
         dropoffAddress: {
-            //id
-            type: String,
+            type: Schema.Types.ObjectId,
+            ref: "UserAddress",
         },
         pickupTime: {
             type: String,
@@ -54,6 +54,7 @@ const orderSchema = new Schema(
                 5, // "Ready-for-Drop off" ,
                 6, // "Dropped-Off agent assigned",
                 7, // "Completed",
+                8
             ],
             default: 0,
         },
@@ -80,11 +81,11 @@ const orderSchema = new Schema(
         },
         orderPickupAgentId: {
             type: Schema.Types.ObjectId,
-            ref: "DeliveryBoy",
+            ref: "deliveryAgent",
         },
         orderDeliveryAgentId: {
             type: Schema.Types.ObjectId,
-            ref: "DeliveryBoy",
+            ref: "deliveryAgent",
         },
         selfService: {
             type: Boolean,
