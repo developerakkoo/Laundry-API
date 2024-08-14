@@ -1,0 +1,3739 @@
+{
+	"info": {
+		"_postman_id": "1dda09ad-fb8a-4655-83cd-61e751d8778c",
+		"name": "Laundry-app",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "20766281"
+	},
+	"item": [
+		{
+			"name": "Admin",
+			"item": [
+				{
+					"name": "Dashboard",
+					"item": [
+						{
+							"name": "get dashboard stats",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjY2YTc0ODA5MWYyN2I0ZjVmYjUwNmMxNSIsImFkbWluVHlwZSI6MCwiYWRtaW5BY2Nlc3MiOjAsImNhdGVnb3J5QWNjZXNzIjowLCJ1c2VyQWNjZXNzIjowLCJkZWxpdmVyeUFnZW50QWNjZXNzIjowLCJwYXJ0bmVyQWNjZXNzIjowLCJzaG9wZUFjY2VzcyI6MCwic2VydmljZXNBY2Nlc3MiOjAsIm9yZGVyQWNjZXNzIjowLCJtZXNzYWdlQWNjZXNzIjowLCJjYXNoYmFja09mZmVyQWNjZXNzIjowLCJlbWFpbCI6ImJyZWV6eWVtYXJ0bGxwQGdtYWlsLmNvbSIsImNyZWF0ZWRBdCI6IjIwMjQtMDctMjlUMDc6NDM6MDUuNDQ4WiIsInVwZGF0ZWRBdCI6IjIwMjQtMDctMjlUMDc6NDM6NDIuOTYyWiIsIl9fdiI6MH0sInVzZXJUeXBlIjoxLCJpYXQiOjE3MjM0NDE3NjYsImV4cCI6MTcyMzcwMDk2Nn0.eldRNNFY6rtsuVXbSPLgms4gFaF-aVz-72siCdi4bKQ",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{url}}/api/v1/admin/dashboard/stats?startDate=15-07-2024&endDate=31-08-2024",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"dashboard",
+										"stats"
+									],
+									"query": [
+										{
+											"key": "startDate",
+											"value": "15-07-2024"
+										},
+										{
+											"key": "endDate",
+											"value": "31-08-2024"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "total revenue chart",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}/api/v1/admin/dashboard/totalrevenue/chart",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"dashboard",
+										"totalrevenue",
+										"chart"
+									],
+									"query": [
+										{
+											"key": "sort",
+											"value": "dayOfMonth",
+											"disabled": true
+										},
+										{
+											"key": "sort",
+											"value": "week",
+											"disabled": true
+										},
+										{
+											"key": "sort",
+											"value": "year",
+											"disabled": true
+										},
+										{
+											"key": "sort",
+											"value": "month",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Data",
+					"item": [
+						{
+							"name": "add data",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{userAccesstoken}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"gstPercentage\": 5,\r\n    \"deliveryCharges\": 40,\r\n    \"expressDeliveryCharges\": 100,\r\n    \"platformFee\": 20\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{url}}/api/v1/admin/add/data",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"add",
+										"data"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Register admin ",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"adminType\": 0,\r\n    \"email\": \"{{$randomEmail}}\",\r\n    \"password\": \"Pass@123\",\r\n    \"categoryAccess\": 0,\r\n    \"userAccess\": 0\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/admin/register",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Admin login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"breezyemartllp@gmail.com\",\r\n    \"password\": \"Pass@123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/admin/login",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Admin logout",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/api/v1/admin/logout",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"logout"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "admin get-users",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{userAccesstoken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"gstPercentage\": 5,\r\n    \"deliveryCharges\": 40,\r\n    \"expressDeliveryCharges\": 100,\r\n    \"platformFee\": 20\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/admin/get-users",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"get-users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "admin get-user by id",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{userAccesstoken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/v1/admin/get-user/66960f211c4a539773a40867",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"get-user",
+								"66960f211c4a539773a40867"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "admin delete-user",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/admin/delete-user/6641fbc4bc09858b41f82470",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"delete-user",
+								"6641fbc4bc09858b41f82470"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get-delivery-agents",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/admin/get-delivery-agents?status=1",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"get-delivery-agents"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "pageSize",
+									"value": "2",
+									"disabled": true
+								},
+								{
+									"key": "populate",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "startDate",
+									"value": "2024-05-14",
+									"disabled": true
+								},
+								{
+									"key": "endDate",
+									"value": "2024-05-14",
+									"disabled": true
+								},
+								{
+									"key": "status",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get-delivery-agent by id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/admin/get-delivery-agent/664324dad8ab8e1132a4904b",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"get-delivery-agent",
+								"664324dad8ab8e1132a4904b"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "admin/delete-delivery-agent",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/admin/delete-delivery-agent/664324f1d8ab8e1132a4904f",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"delete-delivery-agent",
+								"664324f1d8ab8e1132a4904f"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "admin/get-partners",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/admin/get-partners",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"get-partners"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "2",
+									"disabled": true
+								},
+								{
+									"key": "pageSize",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "68",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "admin/get-partner by id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/admin/get-partner/6658163160cb62fbfe2c7c25",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"get-partner",
+								"6658163160cb62fbfe2c7c25"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "admin update-partner",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"userId\":\"6658163160cb62fbfe2c7c25\",\r\n    \"status\":1\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/v1/admin/update-partner",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"update-partner"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "admin/delete-partner",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/admin/delete-partner/6658163960cb62fbfe2c7c29",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"delete-partner",
+								"6658163960cb62fbfe2c7c29"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "admin add-admin",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"adminType\": 1,\r\n    \"email\": \"{{$randomEmail}}\",\r\n    \"password\": \"Pass@123\",\r\n    \"adminAccess\":1,\r\n    \"categoryAccess\": 1,\r\n    \"userAccess\": 1\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/v1/admin/add-admin",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"add-admin"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "send firebase notification",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjY2YTc0ODA5MWYyN2I0ZjVmYjUwNmMxNSIsImFkbWluVHlwZSI6MCwiYWRtaW5BY2Nlc3MiOjAsImNhdGVnb3J5QWNjZXNzIjowLCJ1c2VyQWNjZXNzIjowLCJkZWxpdmVyeUFnZW50QWNjZXNzIjowLCJwYXJ0bmVyQWNjZXNzIjowLCJzaG9wZUFjY2VzcyI6MCwic2VydmljZXNBY2Nlc3MiOjAsIm9yZGVyQWNjZXNzIjowLCJtZXNzYWdlQWNjZXNzIjowLCJjYXNoYmFja09mZmVyQWNjZXNzIjowLCJlbWFpbCI6ImJyZWV6eWVtYXJ0bGxwQGdtYWlsLmNvbSIsImNyZWF0ZWRBdCI6IjIwMjQtMDctMjlUMDc6NDM6MDUuNDQ4WiIsInVwZGF0ZWRBdCI6IjIwMjQtMDctMjlUMDc6NDM6NDIuOTYyWiIsIl9fdiI6MH0sInVzZXJUeXBlIjoxLCJpYXQiOjE3MjM0NDE3NjYsImV4cCI6MTcyMzcwMDk2Nn0.eldRNNFY6rtsuVXbSPLgms4gFaF-aVz-72siCdi4bKQ",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"title\": \"test\",\r\n    \"body\": \"hello user \",\r\n    \"tokens\": [\r\n        \"d4BkPkRzQnqI0l89Q7NrAy:APA91bGrYi5VaVWdWnJSzQO4Tr8QMbBHEmqoSLUG-J4bs1tRLommBKqZ6gMzUBFj-l2OhvLEJ_O_lXwDLCZFPKbN_oZgegGlRtP6gqHV5RUNS-QyzonL4WiyKsgSftGJdUxtsH7gJofK\"\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/admin/send-notification",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"send-notification"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "User",
+			"item": [
+				{
+					"name": "Address",
+					"item": [
+						{
+							"name": "add-address",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{userAccesstoken}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"type\": \"Home\",\r\n    \"address\": \"{{$randomStreetAddress}}\",\r\n    \"landmark\": \"{{$randomStreetAddress}}\",\r\n    \"pinCode\": \"416001\", // Corrected pin code\r\n    \"selected\": true,\r\n    \"lat\": 18.50074,\r\n    \"lng\": 73.79012\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{url}}/api/v1/user/add-address?userId=66a747bbf4717d4d43ce37ac",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"user",
+										"add-address"
+									],
+									"query": [
+										{
+											"key": "userId",
+											"value": "66a747bbf4717d4d43ce37ac"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get all-address by user id",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{userAccesstoken}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{url}}/api/v1/user/get/all-address/{{userId}}",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"user",
+										"get",
+										"all-address",
+										"{{userId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get address by Id",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{userAccesstoken}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{url}}/api/v1/user/get/addressById/669615136a13b09d166d662b",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"user",
+										"get",
+										"addressById",
+										"669615136a13b09d166d662b"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "select-address",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{userAccesstoken}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"addressId\": \"669615136a13b09d166d662b\",\r\n    \"selected\": false\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{url}}/api/v1/user/select-address",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"user",
+										"select-address"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete-address",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{userAccesstoken}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{url}}/api/v1/user/delete-address/669615136a13b09d166d662b",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"user",
+										"delete-address",
+										"669615136a13b09d166d662b"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "User register",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const userData = pm.response.json().data\r",
+									"\r",
+									"\r",
+									"pm.collectionVariables.set(\"userId\", userData._id);\r",
+									"pm.collectionVariables.set(\"useremail\", userData.email);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"{{$randomFullName}}\",\r\n    \"email\": \"{{$randomEmail}}\",\r\n    \"phoneNumber\": \"{{$randomPhoneNumber}}\",\r\n    \"password\": \"Pass@123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/user/register",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"user",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "User login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const data = pm.response.json().data\r",
+									"\r",
+									"\r",
+									"pm.collectionVariables.set(\"userAccesstoken\",data.accessToken)"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"phoneNumber\":\"9637854685\"\r\n    // \"password\":\"Pass@123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/user/login",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"user",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "User logout",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{userAccesstoken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/v1/user/logout",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"user",
+								"logout"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "user update-profile",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    // \"name\": \"pery skiles\",\r\n    // \"email\": \"Skye6@gmail.com\",\r\n    // \"phoneNumber\": \"9637854625\"\r\n    \"address\": {\r\n        // \"addressLine1\": \"laxmi chowk\",\r\n        // \"addressLine2\": \"12156\",\r\n        // \"addressLine3\": \"54151\",\r\n        // \"landmark\":\"near hdfc bank\",\r\n        \"city\": \"mumbai\"\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/user/update-profile",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"user",
+								"update-profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": " user get-current-user",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{userAccesstoken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/v1/user/get-current-user",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"user",
+								"get-current-user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "user get-categories",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{userAccesstoken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/v1/user/get-categories",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"user",
+								"get-categories"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "user get-category",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/user/get-category/6641ba32408cdbea79ff4ab8",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"user",
+								"get-category",
+								"6641ba32408cdbea79ff4ab8"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Category",
+			"item": [
+				{
+					"name": "admin add-category",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\":\" category\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/admin/add-category",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"add-category"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "admin add  category with image",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{userAccesstoken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "categoryId",
+									"value": "6641ba32408cdbea79ff4ab8",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "Laundry app/category/WhatsApp Image 2024-07-24 at 2.51.41 PM (4).jpeg"
+								},
+								{
+									"key": "name",
+									"value": "test1",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/admin/add-category",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"add-category"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "admin update-category",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\":\"category\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/v1/admin/update-category/6641ba32408cdbea79ff4ab8",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"update-category",
+								"6641ba32408cdbea79ff4ab8"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "admin get-category ",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/admin/get-category/6641ba0d408cdbea79ff4ab2",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"get-category",
+								"6641ba0d408cdbea79ff4ab2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "admin get-categories",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjY2M2YwNmUyMWE4M2FjMDllYTE3NTE3MyIsImFkbWluVHlwZSI6MSwiY2F0ZWdvcnlBY2Nlc3MiOjAsInVzZXJBY2Nlc3MiOjAsImVtYWlsIjoiQWxmcmVkX1NpbW9uaXNAaG90bWFpbC5jb20iLCJjcmVhdGVkQXQiOiIyMDI0LTA1LTEwVDA1OjQ5OjIyLjY0NloiLCJ1cGRhdGVkQXQiOiIyMDI0LTA3LTE2VDA2OjMwOjE3LjA3NFoiLCJfX3YiOjAsImFkbWluQWNjZXNzIjowLCJkZWxpdmVyeUFnZW50QWNjZXNzIjoxLCJvcmRlckFjY2VzcyI6MCwicGFydG5lckFjY2VzcyI6MCwicHJvZHVjdEFjY2VzcyI6MCwic2VydmljZXNBY2Nlc3MiOjAsInNob3BlQWNjZXNzIjowLCJjYXNoYmFja09mZmVyQWNjZXNzIjowLCJtZXNzYWdlQWNjZXNzIjowfSwidXNlclR5cGUiOjEsImlhdCI6MTcyMTgxMzkwMCwiZXhwIjoxNzIyMDczMTAwfQ.c91QLe9GtBJEEZjmd2hUeDqmwyY5ecAqoyeSqNgMjlE",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/v1/admin/get-categories",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"get-categories"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "admin delete-category",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/admin/delete-category/6641ba0d408cdbea79ff4ab2",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"delete-category",
+								"6641ba0d408cdbea79ff4ab2"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Delivery Agent",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"{{$randomFullName}}\",\r\n    \"email\": \"{{$randomEmail}}\",\r\n    \"phoneNumber\": \"{{$randomPhoneNumber}}\",\r\n    \"password\": \"Pass@123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/deliveryAgent/register",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"deliveryAgent",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"phoneNumber\": \"799-654-8320\",\r\n    \"password\": \"Pass@123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/v1/deliveryAgent/login",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"deliveryAgent",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get-current-user",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/deliveryAgent/get-current-user",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"deliveryAgent",
+								"get-current-user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update-profile-image",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "test files/img/icons8-sent-64.png"
+								},
+								{
+									"key": "userId",
+									"value": "664324f1d8ab8e1132a4904f",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/v1/deliveryAgent/update-profile-image",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"deliveryAgent",
+								"update-profile-image"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update delivery-agent document",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "dropeat/Test Data/aadhar.jpg",
+									"disabled": true
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "dropeat/Test Data/pan.jpg",
+									"disabled": true
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "dropeat/Test Data/DL.jpg"
+								},
+								{
+									"key": "userId",
+									"value": "66b72b0baa3f74c863653538",
+									"type": "text"
+								},
+								{
+									"key": "documentType",
+									"value": "33",
+									"type": "text"
+								},
+								{
+									"key": "documentNumber",
+									"value": "fdfedf",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/deliveryAgent/update/delivery-agent/document",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"deliveryAgent",
+								"update",
+								"delivery-agent",
+								"document"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/deliveryAgent/logout",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"deliveryAgent",
+								"logout"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "admin update-delivery-agent",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"userId\": \"664324dad8ab8e1132a4904b\",\r\n    \"name\": \"Amber\"\r\n    // \"email\": \"\",\r\n    // \"phoneNumber\": \"\",\r\n    // \"status\": 4\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/v1/admin/update-delivery-agent",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"update-delivery-agent"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Partner",
+			"item": [
+				{
+					"name": "Documents",
+					"item": [
+						{
+							"name": "upload documents",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "userId",
+											"value": "66b62821ad05b02c70b6cad7",
+											"type": "text"
+										},
+										{
+											"key": "documentType",
+											"value": "11",
+											"type": "text"
+										},
+										{
+											"key": "file",
+											"type": "file",
+											"src": "dropeat/Test Data/aadhar.jpg"
+										},
+										{
+											"key": "file",
+											"type": "file",
+											"src": "dropeat/Test Data/pan.jpg",
+											"disabled": true
+										}
+									]
+								},
+								"url": {
+									"raw": "{{url}}/api/v1/partner/document/upload",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"partner",
+										"document",
+										"upload"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "documents get all",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{url}}/api/v1/partner/documents/getall/66b5b8d52625ced939bd27eb",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"partner",
+										"documents",
+										"getall",
+										"66b5b8d52625ced939bd27eb"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get doc by id",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{url}}/api/v1/partner/document/66b5b92e1ccc8d6a605c75a2",
+									"host": [
+										"{{url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"partner",
+										"document",
+										"66b5b92e1ccc8d6a605c75a2"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Register partner ",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"{{$randomUserName}}\",\r\n    \"email\": \"{{$randomEmail}}\",\r\n    // \"password\": \"Pass@123\",\r\n    \"phoneNumber\": \"{{$randomPhoneNumber}}\",\r\n    \"shopeName\": \"{{$randomCompanyName}} laundry\",\r\n    \"isAcceptExpressService\": true,\r\n    \"expressServiceCharges\": 100,\r\n    \"address\": {\r\n        \"addressLine1\": \"{{$randomStreetName}}\",\r\n        \"addressLine2\": \"{{$randomStreetAddress}}\",\r\n        \"addressLine3\": \"test\",\r\n        \"city\": \"{{$randomCity}}\"\r\n    },\r\n    \"lat\": 18.594842592861156,\r\n    \"lng\": 73.72846080324209,\r\n    \"category\": [\r\n        \"66a7496d1f27b4f5fb506c1d\",\r\n        \"66a749fe1f27b4f5fb506c23\",\r\n        \"66a74a1b1f27b4f5fb506c2a\",\r\n        \"66a74a341f27b4f5fb506c30\",\r\n        \"66a74a441f27b4f5fb506c36\",\r\n        \"66a74a521f27b4f5fb506c3c\"\r\n    ],\r\n    \"shopTimeTable\": [\r\n        {\r\n            \"day\": \"Monday\",\r\n            \"openingTime\": \"09:00 AM\",\r\n            \"closingTime\": \"09:00 PM\"\r\n        },\r\n        {\r\n            \"day\": \"Tuesday\",\r\n            \"openingTime\": \"09:00 AM\",\r\n            \"closingTime\": \"09:00 PM\"\r\n        },\r\n        {\r\n            \"day\": \"Wednesday\",\r\n            \"openingTime\": \"09:00 AM\",\r\n            \"closingTime\": \"09:00 PM\"\r\n        },\r\n        {\r\n            \"day\": \"Thursday\",\r\n            \"openingTime\": \"09:00 AM\",\r\n            \"closingTime\": \"09:00 PM\"\r\n        },\r\n        {\r\n            \"day\": \"Friday\",\r\n            \"openingTime\": \"09:00 AM\",\r\n            \"closingTime\": \"09:00 PM\"\r\n        },\r\n        {\r\n            \"day\": \"Saturday\",\r\n            \"openingTime\": \"09:00 AM\",\r\n            \"closingTime\": \"09:00 PM\"\r\n        },\r\n        {\r\n            \"day\": \"Sunday\",\r\n            \"openingTime\": \"10:00 AM\",\r\n            \"closingTime\": \"06:00 PM\"\r\n        }\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/partner/register",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partner",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login partner",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"phoneNumber\": \"468-675-7196\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/partner/login",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partner",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Logout partner",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/partner/logout",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partner",
+								"logout"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "upload profile image",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "test files/img/cricket-stadium.png"
+								},
+								{
+									"key": "userId",
+									"value": "6658163160cb62fbfe2c7c25",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/v1/partner/upload-image",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partner",
+								"upload-image"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "partner update-profile",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"userId\":\"6658163160cb62fbfe2c7c25\",\r\n    \"password\":\"Test@123\",\r\n    \"confirmPassword\":\"Test@123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/v1/partner/update-profile",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partner",
+								"update-profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get-current-user",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/partner/get-current-user",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partner",
+								"get-current-user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "dashboard stats",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/api/v1/partner/dashboard/stats?shopId=66b5b8d52625ced939bd27ef",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partner",
+								"dashboard",
+								"stats"
+							],
+							"query": [
+								{
+									"key": "shopId",
+									"value": "66b5b8d52625ced939bd27ef"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Shope",
+			"item": [
+				{
+					"name": "Partner add shop",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{userAccesstoken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"{{$randomCompanyName}} laundry\",\r\n    \"isAcceptExpressService\":true,\r\n    \"expressServiceCharges\":100,\r\n    \"address\": {\r\n        \"addressLine1\": \"{{$randomStreetName}}\",\r\n        \"addressLine2\": \"{{$randomStreetAddress}}\",\r\n        \"addressLine3\": \"test\",\r\n        \"city\": \"{{$randomCity}}\"\r\n    },\r\n    \"partnerId\": \"66a74ad01f27b4f5fb506c49\",\r\n    \"lat\": 18.594842592861156,\r\n    \"lng\": 73.72846080324209,\r\n    \"category\": [\r\n        \"66a7496d1f27b4f5fb506c1d\",\r\n        \"66a749fe1f27b4f5fb506c23\",\r\n        \"66a74a1b1f27b4f5fb506c2a\",\r\n        \"66a74a341f27b4f5fb506c30\",\r\n        \"66a74a441f27b4f5fb506c36\",\r\n        \"66a74a521f27b4f5fb506c3c\"\r\n    ],\r\n    \"shopTimeTable\": [\r\n        {\r\n            \"day\": \"Monday\",\r\n            \"openingTime\": \"09:00 AM\",\r\n            \"closingTime\": \"09:00 PM\"\r\n        },\r\n        {\r\n            \"day\": \"Tuesday\",\r\n            \"openingTime\": \"09:00 AM\",\r\n            \"closingTime\": \"09:00 PM\"\r\n        },\r\n        {\r\n            \"day\": \"Wednesday\",\r\n            \"openingTime\": \"09:00 AM\",\r\n            \"closingTime\": \"09:00 PM\"\r\n        },\r\n        {\r\n            \"day\": \"Thursday\",\r\n            \"openingTime\": \"09:00 AM\",\r\n            \"closingTime\": \"09:00 PM\"\r\n        },\r\n        {\r\n            \"day\": \"Friday\",\r\n            \"openingTime\": \"09:00 AM\",\r\n            \"closingTime\": \"09:00 PM\"\r\n        },\r\n        {\r\n            \"day\": \"Saturday\",\r\n            \"openingTime\": \"09:00 AM\",\r\n            \"closingTime\": \"09:00 PM\"\r\n        },\r\n        {\r\n            \"day\": \"Sunday\",\r\n            \"openingTime\": \"10:00 AM\",\r\n            \"closingTime\": \"06:00 PM\"\r\n        }\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/partner/shop/add",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partner",
+								"shop",
+								"add"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Shop upload-image",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{userAccesstoken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "Laundry app/laundry/WhatsApp Image 2024-07-24 at 2.44.01 PM.jpeg"
+								},
+								{
+									"key": "shopeId",
+									"value": "66a74c7a1f27b4f5fb506c68",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/partner/shop/upload-image",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partner",
+								"shop",
+								"upload-image"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "shop  update",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\":\"Max Laundry\",\r\n    \"address\":{\r\n        \"addressLine3\":\"pune\"\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/v1/partner/shop/update/665ab423dfc33d42293c2f7e",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partner",
+								"shop",
+								"update",
+								"665ab423dfc33d42293c2f7e"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "shop get by id",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{userAccesstoken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/partner/shop/get/669796a3fb19cae7d4da8f1f",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partner",
+								"shop",
+								"get",
+								"669796a3fb19cae7d4da8f1f"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "shop get-all",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{userAccesstoken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/v1/partner/shop/get-all",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partner",
+								"shop",
+								"get-all"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "2",
+									"disabled": true
+								},
+								{
+									"key": "pageSize",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "tumb",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "shop get by partnerId",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{userAccesstoken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/v1/partner/shop/get/partnerId/669794bef86cb004ff777527",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partner",
+								"shop",
+								"get",
+								"partnerId",
+								"669794bef86cb004ff777527"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "shop delete by id",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/partner/shop/delete/665ab96dce37b5ed417e37ea",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partner",
+								"shop",
+								"delete",
+								"665ab96dce37b5ed417e37ea"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "shop get by category",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    // \"categoryId\": \"66a7496d1f27b4f5fb506c1d\",\r\n    \"userId\": \"66a746e588e3e9daebc98fb8\",\r\n    \"latitude\": 18.596280048752444,\r\n    \"longitude\": 73.71762594679275\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/partner/shop/get/by/category?pageSize=50",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partner",
+								"shop",
+								"get",
+								"by",
+								"category"
+							],
+							"query": [
+								{
+									"key": "pageSize",
+									"value": "50"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get shop near by",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/api/v1/partner/shop/get-all",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partner",
+								"shop",
+								"get-all"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Service",
+			"item": [
+				{
+					"name": "Add service ",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{userAccesstoken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"categoryId\": \"66a74a341f27b4f5fb506c30\",\r\n    \"shopeId\": \"66a74c281f27b4f5fb506c52\",\r\n    \"name\": \"Shoe Cleaning\",\r\n    \"type\": 1,\r\n    \"description\": \"{{$randomLoremText}}\",\r\n    // \"perKgPrice\": 100, // kg price is only applicable when quantityAcceptedIn=1 or 2\r\n    \"perPeacePrice\":50, // quantityAcceptedIn=1  perPeacePrice is not applivable \r\n    \"quantityAcceptedIn\": 0\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/partner/service/add",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partner",
+								"service",
+								"add"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "upload-image",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{userAccesstoken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "serviceId",
+									"value": "66a74f151f27b4f5fb506d17",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "Laundry app/services/bedsheet.jpeg"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/partner/service/upload-image",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partner",
+								"service",
+								"upload-image"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "service update",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\":\"shirt\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/v1/partner/service/update/665abcc79e12c7da725c6847",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partner",
+								"service",
+								"update",
+								"665abcc79e12c7da725c6847"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "service  get by id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/partner/service/get/665abcc79e12c7da725c6847",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partner",
+								"service",
+								"get",
+								"665abcc79e12c7da725c6847"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get service by category Id ",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{userAccesstoken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/v1/partner/service/get/categoryId/668f9909e6af40f90bee2a73",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partner",
+								"service",
+								"get",
+								"categoryId",
+								"668f9909e6af40f90bee2a73"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "2",
+									"disabled": true
+								},
+								{
+									"key": "pageSize",
+									"value": "2",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get service by shop Id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/api/v1/partner/service/get/shopId/66a0ce2183d5aa0964cd09e0",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partner",
+								"service",
+								"get",
+								"shopId",
+								"66a0ce2183d5aa0964cd09e0"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "2",
+									"disabled": true
+								},
+								{
+									"key": "pageSize",
+									"value": "2",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "service get all",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{userAccesstoken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/v1/partner/service/get-all?search=t-shirt shirt ",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partner",
+								"service",
+								"get-all"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "2",
+									"disabled": true
+								},
+								{
+									"key": "pageSize",
+									"value": "2",
+									"disabled": true
+								},
+								{
+									"key": "categoryId",
+									"value": "668f9909e6af40f90bee2a73",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "t-shirt shirt "
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "service delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/partner/service/delete/665abcc79e12c7da725c6847",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"partner",
+								"service",
+								"delete",
+								"665abcc79e12c7da725c6847"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Cart",
+			"item": [
+				{
+					"name": "Add to cart",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{userAccesstoken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"userId\":\"66a747401807af74bfc40913\",\r\n    \"serviceId\":\"66a74edb1f27b4f5fb506ce5\",\r\n    \"quantity\":1,\r\n    \"selectedQuantityType\":0\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/cart/add",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"cart",
+								"add"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Remove item from cart ",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"userId\":\"66960f211c4a539773a40867\",\r\n    \"shopId\":\"665ab83c2703ceca57e7f2a0\",\r\n    \"serviceId\":\"669799d584ac14dd1ef0f2f6\",\r\n    \"quantity\":1\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/cart/remove",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"cart",
+								"remove"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get my cart",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/cart/663f1f53945d063a37e3d0ad",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"cart",
+								"663f1f53945d063a37e3d0ad"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Clear my cart",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/api/v1/cart/clear/66960f211c4a539773a40867",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"cart",
+								"clear",
+								"66960f211c4a539773a40867"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Order",
+			"item": [
+				{
+					"name": "calculate amount-to-pay",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"userId\": \"66a747401807af74bfc40913\",\r\n    // \"selfService\":true//,\r\n    \"code\":\"BREEZY\"\r\n    // \"useWalletPoints\": true,\r\n    // \"useExpressDelivery\": true\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/order/calculate/amount-to-pay",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"order",
+								"calculate",
+								"amount-to-pay"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "order place",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"userId\": \"66a747401807af74bfc40913\",\r\n    \"dropoffAddressId\": \"66b72f78bed09c0d4597a585\",\r\n    \"pickupAddressId\": \"66b72f78bed09c0d4597a585\",\r\n    \"pickupTime\": \"10AM\",\r\n    \"dropoffTime\": \"5PM\",\r\n    \"selfService\": true,\r\n    \"priceDetails\": {\r\n        \"subtotal\": 300,\r\n        \"gstAmount\": 15,\r\n        \"deliveryCharges\": 40,\r\n        \"platformFee\": 20,\r\n        \"expressDeliveryCharges\": 0,\r\n        \"discount\": 40,\r\n        \"walletPointsUsed\": 0,\r\n        \"promoCodeId\": \"66a341e4d6df5a763cf445cc\",\r\n        \"totalAmountToPay\": 335,\r\n        \"promoCodeDetails\": {\r\n            \"_id\": \"66a341e4d6df5a763cf445cc\",\r\n            \"name\": \"get free delivry\",\r\n            \"code\": \"BREEZY\",\r\n            \"codeType\": 1,\r\n            \"discountAmount\": 0,\r\n            \"minOrderAmount\": 300,\r\n            \"description\": \"Order upto 300 and get free delivery\",\r\n            \"expiry\": \"25-08-2024\",\r\n            \"isActive\": true,\r\n            \"createdAt\": \"2024-07-26T06:27:48.003Z\",\r\n            \"updatedAt\": \"2024-07-26T06:27:48.003Z\",\r\n            \"__v\": 0\r\n        },\r\n        \"deliveryBoyCompensation\": 40\r\n    }\r\n    // \"useWallet\": true\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/order/place",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"order",
+								"place"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update order mark order as complete",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/order/66619dcc2f12a18bb22b139b/complete",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"order",
+								"66619dcc2f12a18bb22b139b",
+								"complete"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Assign delivery boy to order",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"orderId\": \"66b750406c2066730975afbf\",\r\n    \"orderPickupAgentId\": \"66b72af6aa3f74c863653528\"//,\r\n    // \"orderDeliveryAgentId\": \"66b72af6aa3f74c863653528\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/order/assign/deliveryAgent",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"order",
+								"assign",
+								"deliveryAgent"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Change order status",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/order/665ffc31397cf7890a3c614c/changeStatus/Dropped-Off",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"order",
+								"665ffc31397cf7890a3c614c",
+								"changeStatus",
+								"Dropped-Off"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get order by id ",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/order/get/665ffc31397cf7890a3c614c",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"order",
+								"get",
+								"665ffc31397cf7890a3c614c"
+							],
+							"query": [
+								{
+									"key": "populate",
+									"value": "1",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get order by userId",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/order/get-by/userId/665ec3307b835ce834267540",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"order",
+								"get-by",
+								"userId",
+								"665ec3307b835ce834267540"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "2",
+									"disabled": true
+								},
+								{
+									"key": "pageSize",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "status",
+									"value": "Dropped-Off",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get order  by delivery boy Id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/order/get-by/deliveryBoyId/664324dad8ab8e1132a4904b",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"order",
+								"get-by",
+								"deliveryBoyId",
+								"664324dad8ab8e1132a4904b"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get order by shop Id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/order/get-by/shopId/665ab83c2703ceca57e7f2a0",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"order",
+								"get-by",
+								"shopId",
+								"665ab83c2703ceca57e7f2a0"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get all orders",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjY2YTc0ODA5MWYyN2I0ZjVmYjUwNmMxNSIsImFkbWluVHlwZSI6MCwiYWRtaW5BY2Nlc3MiOjAsImNhdGVnb3J5QWNjZXNzIjowLCJ1c2VyQWNjZXNzIjowLCJkZWxpdmVyeUFnZW50QWNjZXNzIjowLCJwYXJ0bmVyQWNjZXNzIjowLCJzaG9wZUFjY2VzcyI6MCwic2VydmljZXNBY2Nlc3MiOjAsIm9yZGVyQWNjZXNzIjowLCJtZXNzYWdlQWNjZXNzIjowLCJjYXNoYmFja09mZmVyQWNjZXNzIjowLCJlbWFpbCI6ImJyZWV6eWVtYXJ0bGxwQGdtYWlsLmNvbSIsImNyZWF0ZWRBdCI6IjIwMjQtMDctMjlUMDc6NDM6MDUuNDQ4WiIsInVwZGF0ZWRBdCI6IjIwMjQtMDctMjlUMDc6NDM6NDIuOTYyWiIsIl9fdiI6MH0sInVzZXJUeXBlIjoxLCJpYXQiOjE3MjM0NDE3NjYsImV4cCI6MTcyMzcwMDk2Nn0.eldRNNFY6rtsuVXbSPLgms4gFaF-aVz-72siCdi4bKQ",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/v1/admin/order/get?populate=1",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"order",
+								"get"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "2",
+									"disabled": true
+								},
+								{
+									"key": "pageSize",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "status",
+									"value": "Dropped-Off",
+									"disabled": true
+								},
+								{
+									"key": "startDate",
+									"value": "05-06-2024",
+									"disabled": true
+								},
+								{
+									"key": "endDate",
+									"value": "10-06-2024",
+									"disabled": true
+								},
+								{
+									"key": "populate",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update order status",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"orderId\": \"66b748873d0e2bef84d17449\",\r\n    \"status\": 5\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/order/update/status",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"order",
+								"update",
+								"status"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "verify order  otp and update-order",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"orderId\": \"66b748873d0e2bef84d17449\",\r\n    \"otpType\": 1,\r\n    \"otp\": 3735\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/order/verify/otp/update-order",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"order",
+								"verify",
+								"otp",
+								"update-order"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "generate order  otp",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"orderId\": \"66a490ca8f79e153c8b5491f\",\r\n    \"otpType\": 1//0 for pickup otp\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/order/generate/otp",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"order",
+								"generate",
+								"otp"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "initiate payment",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"amount\":100\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/order/initiate/payment",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"order",
+								"initiate",
+								"payment"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Ratting",
+			"item": [
+				{
+					"name": "Add ratting",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "userId",
+									"value": "66a746e588e3e9daebc98fb8",
+									"type": "text"
+								},
+								{
+									"key": "serviceId",
+									"value": "66a74edb1f27b4f5fb506ce5",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "tyvcghvsvchsvc",
+									"type": "text"
+								},
+								{
+									"key": "star",
+									"value": "3",
+									"type": "text"
+								},
+								{
+									"key": "image",
+									"type": "file",
+									"src": [
+										"Laundry app/services/curton.jpeg",
+										"Laundry app/services/bedsheet.jpeg",
+										"Laundry app/services/Shirt.jpeg",
+										"Laundry app/services/t-shit.jpeg",
+										"Laundry app/services/jans.jpeg"
+									]
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/ratting/add",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"ratting",
+								"add"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get ratting by id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/ratting/get/666148f4bbfaeeed3a886a69",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"ratting",
+								"get",
+								"666148f4bbfaeeed3a886a69"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get ratting  by user Id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/ratting/get-by/userId/663f1f53945d063a37e3d0ad",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"ratting",
+								"get-by",
+								"userId",
+								"663f1f53945d063a37e3d0ad"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get ratting by service Id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/ratting/get-by/serviceId/665abcf79e12c7da725c684b",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"ratting",
+								"get-by",
+								"serviceId",
+								"665abcf79e12c7da725c684b"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": " Update ratting",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"serviceId\":\"665abcf79e12c7da725c684b\",\r\n    \"userId\":\"663f1f53945d063a37e3d0ad\",\r\n    \"star\":4\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/v1/ratting/update",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"ratting",
+								"update"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get ratting stats by service Id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/ratting/stats/get-by/serviceId/665abcf79e12c7da725c684b",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"ratting",
+								"stats",
+								"get-by",
+								"serviceId",
+								"665abcf79e12c7da725c684b"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get ratting stats for shop",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/api/v1/ratting/stats/get-by/shopId/66a74c281f27b4f5fb506c52?rd=1",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"ratting",
+								"stats",
+								"get-by",
+								"shopId",
+								"66a74c281f27b4f5fb506c52"
+							],
+							"query": [
+								{
+									"key": "rd",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete ratting by id",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/ratting/delete/6661537e9245591114ca0762",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"ratting",
+								"delete",
+								"6661537e9245591114ca0762"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Cashback",
+			"item": [
+				{
+					"name": "admin add cashback",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"orderAmountFrom\": 300,\r\n    \"orderAmountTo\": 400,\r\n    \"cashbackPercent\": 0.10\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/v1/admin/cashback/add",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"cashback",
+								"add"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "admin update cashback",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"orderAmountTo\":400\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/v1/admin/cashback/update/66619b0b16b5d934aac9cfe2",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"cashback",
+								"update",
+								"66619b0b16b5d934aac9cfe2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "admin get all cashback ",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/admin/cashback/get-all",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"cashback",
+								"get-all"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "admin get cashback ",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/admin/cashback/get/66619af116b5d934aac9cfde",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"cashback",
+								"get",
+								"66619af116b5d934aac9cfde"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "admin delete cashback",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/admin/cashback/delete/66619b0b16b5d934aac9cfe2",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"cashback",
+								"delete",
+								"66619b0b16b5d934aac9cfe2"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Message",
+			"item": [
+				{
+					"name": "Send message ",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"orderId\":\"66b750406c2066730975afbf\",\r\n    \"senderId\": \"66a748091f27b4f5fb506c15\",\r\n    \"receiverId\": \"66a747401807af74bfc40913\",\r\n    \"message\": \"Please allow some time to check i will get back to you  soon\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/message/send",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"message",
+								"send"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get message by user Id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/message/get-by/userId/663f06e21a83ac09ea175173?search=can you look in ",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"message",
+								"get-by",
+								"userId",
+								"663f06e21a83ac09ea175173"
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": "can you look in "
+								},
+								{
+									"key": "page",
+									"value": "2",
+									"disabled": true
+								},
+								{
+									"key": "pageSize",
+									"value": "1",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get message by id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/message/get/6662a7350a730ec546e0b3b3",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"message",
+								"get",
+								"6662a7350a730ec546e0b3b3"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all message ",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/message/get/all",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"message",
+								"get",
+								"all"
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": "hey",
+									"disabled": true
+								},
+								{
+									"key": "status",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "2",
+									"disabled": true
+								},
+								{
+									"key": "pageSize",
+									"value": "1",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update message status ",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/message/6662a7350a730ec546e0b3b3/update/1",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"message",
+								"6662a7350a730ec546e0b3b3",
+								"update",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete message ",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/v1/message/6662ad804ac796169c0f8e2a/delete",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"message",
+								"6662ad804ac796169c0f8e2a",
+								"delete"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Subscription Plan",
+			"item": [
+				{
+					"name": "Add Plan",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{userAccesstoken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"test\",\r\n    \"price\": 299,\r\n    \"validity\": \"3\", // in months\r\n    \"features\": [\r\n        {\r\n            \"title\": \"Complimentary Delivery\",\r\n            \"description\": \"Enjoy complimentary delivery services for an 2 months.\"\r\n        },\r\n        {\r\n            \"title\": \"Expedited Delivery\",\r\n            \"description\": \"Experience super-fast delivery with our expedited service.\"\r\n        },\r\n        {\r\n            \"title\": \"Priority Customer Support\",\r\n            \"description\": \"Receive top-tier customer support with priority assistance.\"\r\n        },\r\n        {\r\n            \"title\": \"Cashback\",\r\n            \"description\": \"Get assured cashback on every order.\"\r\n        }\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/admin/subscriptionPlan/add",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"subscriptionPlan",
+								"add"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get-all subscription plan ",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{userAccesstoken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/v1/admin/subscriptionPlan/get-all",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"subscriptionPlan",
+								"get-all"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get subscription plan by id",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{userAccesstoken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/v1/admin/subscriptionPlan/get/669a0c2bc4ee21188fd60050",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"subscriptionPlan",
+								"get",
+								"669a0c2bc4ee21188fd60050"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update subscription plan ",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{userAccesstoken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    // \"name\":\"sdrfcgbhjnkm\",\r\n    // \"price\":\"20\",\r\n    // \"validity\":1,\r\n            \"features\": [\r\n            {\r\n                \"title\": \"Complimentary Delivery\",\r\n                \"description\": \"Enjoy complimentary delivery services for an 2 months.\",\r\n                \"_id\": \"669a0c43c4ee21188fd60059\"\r\n            },\r\n            {\r\n                \"title\": \"Cashback\",\r\n                \"description\": \"Get assured cashback on every order.\",\r\n                \"_id\": \"669a0c43c4ee21188fd6005c\"\r\n            }\r\n        ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/admin/subscriptionPlan/update/669a0c43c4ee21188fd60058",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"subscriptionPlan",
+								"update",
+								"669a0c43c4ee21188fd60058"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete subscription plan ",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{userAccesstoken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/v1/admin/subscriptionPlan/delete/669a0c43c4ee21188fd60058",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"subscriptionPlan",
+								"delete",
+								"669a0c43c4ee21188fd60058"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Subscription",
+			"item": [
+				{
+					"name": "user get all subscription plans ",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{userAccesstoken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/v1/subscription/get/all-plans",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"subscription",
+								"get",
+								"all-plans"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "user purchase subscription",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{userAccesstoken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"userId\": \"66a747401807af74bfc40913\",\r\n    \"planId\": \"669a0b50c4ee21188fd6003d\",\r\n    \"paymentDetails\": \"{paymentId: skjdbfbkfhbvugfvu,success: true}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/subscription/purchase",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"subscription",
+								"purchase"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get user subscription by user id",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{userAccesstoken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/v1/subscription/get/66960f211c4a539773a40867",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"subscription",
+								"get",
+								"66960f211c4a539773a40867"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Promo code",
+			"item": [
+				{
+					"name": "Promo Code add",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{userAccesstoken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"get free delivry\",\r\n    \"code\": \"BREEZY\",\r\n    \"codeType\": 1,\r\n    \"discountAmount\": 0,\r\n    \"minOrderAmount\": 300,\r\n    \"description\": \"Order upto 300 and get free delivery\",\r\n    \"expiry\": \"25-08-2024\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/admin/promoCode/add",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"promoCode",
+								"add"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Favorite",
+			"item": [
+				{
+					"name": "favorite add",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"userId\":\"66a746e588e3e9daebc98fb8\",\r\n    \"shopId\":\"66a74c281f27b4f5fb506c52\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/v1/favorite/add",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"favorite",
+								"add"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "fetch-address",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"address\":\"vira ostello stay pg\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/api/v1/user/fetch-address",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"user",
+						"fetch-address"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "url",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "url",
+			"value": "https://api.breezyemart.com",
+			"type": "string",
+			"disabled": true
+		},
+		{
+			"key": "userAccesstoken",
+			"value": ""
+		},
+		{
+			"key": "userId",
+			"value": ""
+		},
+		{
+			"key": "useremail",
+			"value": ""
+		},
+		{
+			"key": "priceDetails",
+			"value": ""
+		}
+	]
+}
