@@ -719,8 +719,15 @@ exports.getOrdersByShopeId = asyncHandler(async (req, res) => {
     );
     const totalPages = Math.ceil(dataCount / pageSize);
     if (orders.length === 0) {
-        return sendResponse(res, 404, null, "Orders not found");
-    }
+        return sendResponse(res, 200,  {
+            content: orders,
+            startItem,
+            endItem,
+            totalPages,
+            pagesize: orders.length,
+            totalDoc: dataCount,
+        }, "Orders not found");
+    }   
     return sendResponse(
         res,
         200,

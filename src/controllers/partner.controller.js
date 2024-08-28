@@ -92,7 +92,7 @@ exports.getPartnerDocumentId = asyncHandler(async (req, res) => {
 
 exports.login = asyncHandler(async (req, res) => {
     const { phoneNumber } = req.body;
-    const user = await partnerModel.findOne({ phoneNumber }); //.select("+password");
+    const user = await partnerModel.find({ phoneNumber }); //.select("+password");
     if (!user) {
         return sendResponse(
             res,
