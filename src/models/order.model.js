@@ -2,6 +2,10 @@ const { Schema, model } = require("mongoose");
 
 const orderSchema = new Schema(
     {
+        orderId: {
+            type: String,
+            required: true,
+        },
         userId: {
             type: Schema.Types.ObjectId,
             ref: "User",
@@ -54,7 +58,7 @@ const orderSchema = new Schema(
                 5, // "Ready-for-Drop off" ,
                 6, // "Dropped-Off agent assigned",
                 7, // "Completed",
-                8
+                8,
             ],
             default: 0,
         },

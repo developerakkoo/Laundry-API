@@ -33,4 +33,6 @@ router.get("/get-by/userId/:userId", orderController.getAllOrdersByUserId);
 
 router.get("/get-by/shopId/:shopId", orderController.getOrdersByShopeId);
 
+router.delete("/delete/:orderId", orderController.deleteOrderById);
+
 module.exports = { orderRoutes: router };

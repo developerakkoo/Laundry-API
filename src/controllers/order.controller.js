@@ -7,6 +7,7 @@ const Cart = require("../models/cart.model");
 const dataModel = require("../models/data.model");
 const Service = require("../models/services.model");
 const PromoCode = require("../models/promoCode.model");
+const { v4: uuidv4 } = require("uuid");
 const razorpay = require("razorpay");
 const key = process.env.RAZORPAY_ID;
 const secret = process.env.RAZORPAY_SECRET;
@@ -21,6 +22,7 @@ const {
     sendResponse,
     generateOTP,
     apiError,
+    createSearchRegex,
 } = require("../utils/helper.utils");
 const {
     useWalletPoints,
@@ -249,8 +251,15 @@ exports.createOrder = asyncHandler(async (req, res) => {
     if admin activate the cashback for user 
     */
     const cashbackPoints = await calculateCashbackPoints(priceDetails.subtotal);
+    // Generate UUIDv4
+    const uuid = uuidv4();
+    // Convert UUID to uppercase
+    const uppercaseUuid = uuid.toUpperCase();
+    // Extract first 6 characters
+    const orderId = uppercaseUuid.substring(0, 6);
 
     const order = await Order.create({
+        orderId,
         userId,
         shopId: cart.shopId,
         items: cart.products,
@@ -742,10 +751,11 @@ exports.getAllOrders = asyncHandler(async (req, res) => {
         const searchRegex = createSearchRegex(search);
         const filteredOrders = orders.filter(
             (order) =>
-                searchRegex.test(order.user.name) ||
-                searchRegex.test(order.shop.name) ||
-                order.items.some((item) => searchRegex.test(item.item.name)) ||
-                searchRegex.test(order.partner.name),
+                searchRegex.test(order.orderId) ||
+                searchRegex.test(order.user?.name) ||
+                searchRegex.test(order.shop?.name) ||
+                order.items.some((item) => searchRegex.test(item.item?.name)) ||
+                searchRegex.test(order.partner?.name),
         );
         const filteredCount = filteredOrders.length;
         const startItem = skip + 1;
@@ -943,4 +953,13 @@ exports.bulkDelete = asyncHandler(async (req, res) => {
         result.deletedCount,
         "All orders deleted successfully",
     );
+});
+
+exports.deleteOrderById = asyncHandler(async (req, res) => {
+    // Delete a single order by ID
+    const result = await Order.findByIdAndDelete(req.params.orderId);
+    if (!result) {
+        return sendResponse(res, 404, null, "Order not found");
+    }
+    sendResponse(res, 200, result._id, "Order deleted successfully");
 });
