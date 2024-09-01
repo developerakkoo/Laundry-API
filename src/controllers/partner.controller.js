@@ -253,6 +253,7 @@ exports.getAllPartner = asyncHandler(async (req, res) => {
         dbQuery.$or = [
             { name: { $regex: searchRegex } },
             { name: { $regex: searchRegex } },
+            { phoneNumber: { $regex: searchRegex } },
         ];
     }
 
