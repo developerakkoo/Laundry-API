@@ -499,6 +499,18 @@ exports.getAllOrderByDeliveryBoyId = asyncHandler(async (req, res) => {
             { orderDeliveryAgentId: deliveryBoyId },
         ],
     })
+        .populate({
+            path: "userId",
+            select: "-__v -createdAt -updatedAt",
+        })
+        .populate({
+            path: "shopId",
+            select: "image name address partnerId",
+        })
+        .populate({
+            path: "items.item",
+            select: "name price description categoryId image_url",
+        })
         .skip(skip)
         .limit(pageSize);
     const startItem = skip + 1;
@@ -529,10 +541,10 @@ exports.getOrderById = asyncHandler(async (req, res) => {
     let order;
     if (req.query.populate) {
         order = await Order.findById(req.params.orderId)
-        .populate({
-            path: "userId",
-            select: "-__v -createdAt -updatedAt",
-        })
+            .populate({
+                path: "userId",
+                select: "-__v -createdAt -updatedAt",
+            })
             .populate({
                 path: "shopId",
                 select: "image name address partnerId",
@@ -647,7 +659,7 @@ exports.getAllOrders = asyncHandler(async (req, res) => {
                                         __v: 0,
                                         createdAt: 0,
                                         updatedAt: 0,
-                                        relativePath:0
+                                        relativePath: 0,
                                     },
                                 },
                             ],
@@ -815,7 +827,21 @@ exports.getAllOrdersByUserId = asyncHandler(async (req, res) => {
     }
 
     const dataCount = await Order.countDocuments(dbQuery);
-    const orders = await Order.find(dbQuery).skip(skip).limit(pageSize);
+    const orders = await Order.find(dbQuery)
+        .populate({
+            path: "userId",
+            select: "-__v -createdAt -updatedAt",
+        })
+        .populate({
+            path: "shopId",
+            select: "image name address partnerId",
+        })
+        .populate({
+            path: "items.item",
+            select: "name price description categoryId image_url",
+        })
+        .skip(skip)
+        .limit(pageSize);
     const startItem = skip + 1;
     const endItem = Math.min(
         startItem + pageSize - 1,
@@ -866,7 +892,21 @@ exports.getOrdersByShopeId = asyncHandler(async (req, res) => {
     }
 
     const dataCount = await Order.countDocuments(dbQuery);
-    const orders = await Order.find(dbQuery).skip(skip).limit(pageSize);
+    const orders = await Order.find(dbQuery)
+        .populate({
+            path: "userId",
+            select: "-__v -createdAt -updatedAt",
+        })
+        .populate({
+            path: "shopId",
+            select: "image name address partnerId",
+        })
+        .populate({
+            path: "items.item",
+            select: "name price description categoryId image_url",
+        })
+        .skip(skip)
+        .limit(pageSize);
     const startItem = skip + 1;
     const endItem = Math.min(
         startItem + pageSize - 1,
