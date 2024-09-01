@@ -21,6 +21,7 @@ const {
     sendResponse,
     generateOTP,
     apiError,
+    createSearchRegex,
 } = require("../utils/helper.utils");
 const {
     useWalletPoints,
@@ -554,7 +555,7 @@ exports.getAllOrders = asyncHandler(async (req, res) => {
     const pageSize = parseInt(req.query.pageSize) || 10;
     const skip = (pageNumber - 1) * pageSize;
 
-    //sort by status
+    // Filter by status
     if (status) {
         dbQuery.status = status;
     }
@@ -571,7 +572,7 @@ exports.getAllOrders = asyncHandler(async (req, res) => {
         };
     }
 
-    const dataCount = await Order.countDocuments(dbQuery);
+    // Fetch data from the database
     let orders;
     if (populate) {
         orders = await Order.find(dbQuery)
@@ -610,15 +611,33 @@ exports.getAllOrders = asyncHandler(async (req, res) => {
     } else {
         orders = await Order.find(dbQuery);
     }
+
+    // Apply search filtering using array filter method
+    if (search) {
+        const searchRegex = createSearchRegex(search);
+        orders = orders.filter(
+            (order) =>
+                searchRegex.test(order.userId?.name) ||
+                searchRegex.test(order.shopId?.name)||
+                searchRegex.test(order.partnerId?.name)
+        );
+    }
+
+    // Paginate results after filtering
+    const filteredCount = orders.length;
+    orders = orders.slice(skip, skip + pageSize);
+
     const startItem = skip + 1;
     const endItem = Math.min(
         startItem + pageSize - 1,
         startItem + orders.length - 1,
     );
-    const totalPages = Math.ceil(dataCount / pageSize);
+    const totalPages = Math.ceil(filteredCount / pageSize);
+
     if (orders.length === 0) {
         return sendResponse(res, 404, null, "Orders not found");
     }
+
     return sendResponse(
         res,
         200,
@@ -628,7 +647,7 @@ exports.getAllOrders = asyncHandler(async (req, res) => {
             endItem,
             totalPages,
             pagesize: orders.length,
-            totalDoc: dataCount,
+            totalDoc: filteredCount,
         },
         "Orders fetched successfully",
     );
