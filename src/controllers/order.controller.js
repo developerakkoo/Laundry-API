@@ -529,6 +529,10 @@ exports.getOrderById = asyncHandler(async (req, res) => {
     let order;
     if (req.query.populate) {
         order = await Order.findById(req.params.orderId)
+        .populate({
+            path: "userId",
+            select: "-__v -createdAt -updatedAt",
+        })
             .populate({
                 path: "shopId",
                 select: "image name address partnerId",
