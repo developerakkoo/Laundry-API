@@ -21,7 +21,6 @@ const {
     sendResponse,
     generateOTP,
     apiError,
-    createSearchRegex,
 } = require("../utils/helper.utils");
 const {
     useWalletPoints,
@@ -548,91 +547,224 @@ exports.getOrderById = asyncHandler(async (req, res) => {
 });
 
 exports.getAllOrders = asyncHandler(async (req, res) => {
-    let dbQuery = {};
-    const { search, startDate, populate, status } = req.query;
-    const endDate = req.query.endDate || moment().format("YYYY-MM-DD");
+    const { search, startDate, endDate, status } = req.query;
     const pageNumber = parseInt(req.query.page) || 1;
     const pageSize = parseInt(req.query.pageSize) || 10;
     const skip = (pageNumber - 1) * pageSize;
 
+    // Build the aggregation pipeline
+    let pipeline = [{ $match: {} }];
+
     // Filter by status
     if (status) {
-        dbQuery.status = status;
+        pipeline[0].$match.status = parseInt(status);
     }
 
     // Sort by date range
     if (startDate) {
         const sDate = new Date(startDate);
-        const eDate = new Date(endDate);
+        const eDate = new Date(endDate || moment().format("YYYY-MM-DD"));
         sDate.setHours(0, 0, 0, 0);
         eDate.setHours(23, 59, 59, 999);
-        dbQuery.createdAt = {
+        pipeline[0].$match.createdAt = {
             $gte: sDate,
             $lte: eDate,
         };
     }
 
+    // Populate fields
+    pipeline.push(
+        {
+            $lookup: {
+                from: "users",
+                localField: "userId",
+                foreignField: "_id",
+                as: "user",
+            },
+        },
+        {
+            $unwind: {
+                path: "$user",
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $lookup: {
+                from: "shops",
+                localField: "shopId",
+                foreignField: "_id",
+                as: "shop",
+            },
+        },
+        {
+            $unwind: {
+                path: "$shop",
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $lookup: {
+                from: "partners",
+                localField: "shop.partnerId",
+                foreignField: "_id",
+                as: "partner",
+            },
+        },
+        {
+            $unwind: {
+                path: "$partner",
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $lookup: {
+                as: "items",
+                from: "services",
+                foreignField: "_id",
+                localField: "items._id",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            relativePath: 0,
+                            createdAt: 0,
+                            updatedAt: 0,
+                        },
+                    },
+                    {
+                        $lookup: {
+                            from: "categories",
+                            localField: "categoryId",
+                            foreignField: "_id",
+                            as: "category",
+                            pipeline: [
+                                {
+                                    $project: {
+                                        __v: 0,
+                                        createdAt: 0,
+                                        updatedAt: 0,
+                                        relativePath:0
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                ],
+            },
+        },
+        {
+            $lookup: {
+                from: "useraddresses",
+                localField: "pickupAddress",
+                foreignField: "_id",
+                as: "pickupAddress",
+            },
+        },
+        {
+            $unwind: {
+                path: "$pickupAddress",
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $lookup: {
+                from: "useraddresses",
+                localField: "dropoffAddress",
+                foreignField: "_id",
+                as: "dropoffAddress",
+            },
+        },
+        {
+            $unwind: {
+                path: "$dropoffAddress",
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $lookup: {
+                from: "deliveryagents",
+                localField: "orderPickupAgentId",
+                foreignField: "_id",
+                as: "orderPickupAgent",
+            },
+        },
+        {
+            $unwind: {
+                path: "$orderPickupAgent",
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $lookup: {
+                from: "deliveryagents",
+                localField: "orderDeliveryAgentId",
+                foreignField: "_id",
+                as: "orderDeliveryAgent",
+            },
+        },
+        {
+            $unwind: {
+                path: "$orderDeliveryAgent",
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $facet: {
+                metadata: [{ $count: "totalCount" }],
+                data: [{ $skip: skip }, { $limit: pageSize }],
+            },
+        },
+    );
+
     // Fetch data from the database
-    let orders;
-    if (populate) {
-        orders = await Order.find(dbQuery)
-            .populate({
-                path: "userId",
-                select: "name phoneNumber email",
-            })
-            .populate({
-                path: "shopId",
-                select: "image name address partnerId",
-                populate: {
-                    path: "partnerId",
-                    select: "name phoneNumber email",
-                },
-            })
-            .populate({
-                path: "items.item",
-                select: "name price description categoryId image_url",
-            })
-            .populate({
-                path: "pickupAddress",
-                select: "type address landmark pinCode",
-            })
-            .populate({
-                path: "dropoffAddress",
-                select: "type address landmark pinCode",
-            })
-            .populate({
-                path: "orderPickupAgentId",
-                select: "name phoneNumber email",
-            })
-            .populate({
-                path: "orderDeliveryAgentId",
-                select: "name phoneNumber email",
-            });
-    } else {
-        orders = await Order.find(dbQuery);
-    }
+    const results = await Order.aggregate(pipeline);
+    const metadata = results[0]?.metadata[0]?.totalCount || 0;
+    const orders = results[0]?.data || [];
 
     // Apply search filtering using array filter method
     if (search) {
         const searchRegex = createSearchRegex(search);
-        orders = orders.filter(
+        const filteredOrders = orders.filter(
             (order) =>
-                searchRegex.test(order.userId?.name) ||
-                searchRegex.test(order.shopId?.name)||
-                searchRegex.test(order.partnerId?.name)
+                searchRegex.test(order.user.name) ||
+                searchRegex.test(order.shop.name) ||
+                order.items.some((item) => searchRegex.test(item.item.name)) ||
+                searchRegex.test(order.partner.name),
+        );
+        const filteredCount = filteredOrders.length;
+        const startItem = skip + 1;
+        const endItem = Math.min(
+            startItem + pageSize - 1,
+            startItem + filteredOrders.length - 1,
+        );
+        const totalPages = Math.ceil(filteredCount / pageSize);
+
+        if (filteredOrders.length === 0) {
+            return sendResponse(res, 404, null, "Orders not found");
+        }
+
+        return sendResponse(
+            res,
+            200,
+            {
+                content: filteredOrders.slice(skip, skip + pageSize),
+                startItem,
+                endItem,
+                totalPages,
+                pagesize: filteredOrders.length,
+                totalDoc: filteredCount,
+            },
+            "Orders fetched successfully",
         );
     }
 
-    // Paginate results after filtering
-    const filteredCount = orders.length;
-    orders = orders.slice(skip, skip + pageSize);
-
+    // If no search filter, just return paginated results
     const startItem = skip + 1;
     const endItem = Math.min(
         startItem + pageSize - 1,
         startItem + orders.length - 1,
     );
-    const totalPages = Math.ceil(filteredCount / pageSize);
+    const totalPages = Math.ceil(metadata / pageSize);
 
     if (orders.length === 0) {
         return sendResponse(res, 404, null, "Orders not found");
@@ -647,7 +779,7 @@ exports.getAllOrders = asyncHandler(async (req, res) => {
             endItem,
             totalPages,
             pagesize: orders.length,
-            totalDoc: filteredCount,
+            totalDoc: metadata,
         },
         "Orders fetched successfully",
     );
@@ -738,15 +870,8 @@ exports.getOrdersByShopeId = asyncHandler(async (req, res) => {
     );
     const totalPages = Math.ceil(dataCount / pageSize);
     if (orders.length === 0) {
-        return sendResponse(res, 200,  {
-            content: orders,
-            startItem,
-            endItem,
-            totalPages,
-            pagesize: orders.length,
-            totalDoc: dataCount,
-        }, "Orders not found");
-    }   
+        return sendResponse(res, 404, null, "Orders not found");
+    }
     return sendResponse(
         res,
         200,
