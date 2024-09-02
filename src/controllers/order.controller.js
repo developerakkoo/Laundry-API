@@ -615,7 +615,7 @@ exports.getAllOrders = asyncHandler(async (req, res) => {
         },
         {
             $lookup: {
-                from: "shops",
+                from: "shope",
                 localField: "shopId",
                 foreignField: "_id",
                 as: "shop",
