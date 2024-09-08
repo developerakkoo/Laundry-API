@@ -32,6 +32,7 @@ const {
 const moment = require("moment");
 const { sendNotification } = require("./notification.controller");
 const { getIO } = require("../utils/socket");
+const { Types } = require("mongoose");
 
 exports.calculateAmountToPay = asyncHandler(async (req, res) => {
     const data = await dataModel.find();
@@ -495,42 +496,230 @@ exports.getAllOrderByDeliveryBoyId = asyncHandler(async (req, res) => {
     const pageSize = parseInt(req.query.pageSize) || 10;
     const skip = (pageNumber - 1) * pageSize;
     const { deliveryBoyId } = req.params;
-    let dbQuery = { deliveryBoyId };
 
+    // Build the aggregation pipeline
+    let pipeline = [
+        {
+            $match: {
+                $or: [
+                    { orderPickupAgentId: new Types.ObjectId(deliveryBoyId) },
+                    { orderDeliveryAgentId: new Types.ObjectId(deliveryBoyId) },
+                ],
+            },
+        },
+    ];
+
+    // Filter by status
     if (status) {
-        dbQuery.status = status;
+        pipeline[0].$match.status = parseInt(status);
     }
 
-    const dataCount = await Order.countDocuments(dbQuery);
-    const orders = await Order.find({
-        $or: [
-            { orderPickupAgentId: deliveryBoyId },
-            { orderDeliveryAgentId: deliveryBoyId },
-        ],
-    })
-        .populate({
-            path: "userId",
-            select: "-__v -createdAt -updatedAt",
-        })
-        .populate({
-            path: "shopId",
-            select: "image name address partnerId",
-        })
-        .populate({
-            path: "items.item",
-            select: "name price description categoryId image_url",
-        })
-        .skip(skip)
-        .limit(pageSize);
+    // Populate fields
+    pipeline.push(
+        {
+            $lookup: {
+                from: "users",
+                localField: "userId",
+                foreignField: "_id",
+                as: "userId",
+                pipeline: [
+                    {
+                        $project: {
+                            refreshToken: 0,
+                            password: 0, // Exclude the password field
+                            __v: 0,
+                        },
+                    },
+                ],
+            },
+        },
+        {
+            $unwind: {
+                path: "$userId",
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $lookup: {
+                from: "shopes",
+                localField: "shopId",
+                foreignField: "_id",
+                as: "shopId",
+                pipeline: [
+                    {
+                        $lookup: {
+                            from: "categories",
+                            localField: "category",
+                            foreignField: "_id",
+                            as: "category",
+                        },
+                    },
+                    {
+                        $lookup: {
+                            from: "partners",
+                            localField: "partnerId",
+                            foreignField: "_id",
+                            as: "partnerId",
+                            pipeline: [
+                                {
+                                    $project: {
+                                        refreshToken: 0,
+                                        password: 0, // Exclude the password field
+                                        __v: 0,
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                    {
+                        $unwind: {
+                            path: "$partnerId",
+                            preserveNullAndEmptyArrays: true,
+                        },
+                    },
+                ],
+            },
+        },
+        {
+            $unwind: {
+                path: "$shopId",
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $lookup: {
+                from: "services",
+                localField: "items._id",
+                foreignField: "_id",
+                as: "items",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            relativePath: 0,
+                            createdAt: 0,
+                            updatedAt: 0,
+                        },
+                    },
+                    {
+                        $lookup: {
+                            from: "categories",
+                            localField: "categoryId",
+                            foreignField: "_id",
+                            as: "category",
+                            pipeline: [
+                                {
+                                    $project: {
+                                        __v: 0,
+                                        createdAt: 0,
+                                        updatedAt: 0,
+                                        relativePath: 0,
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                ],
+            },
+        },
+        {
+            $lookup: {
+                from: "useraddresses",
+                localField: "pickupAddress",
+                foreignField: "_id",
+                as: "pickupAddress",
+            },
+        },
+        {
+            $unwind: {
+                path: "$pickupAddress",
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $lookup: {
+                from: "useraddresses",
+                localField: "dropoffAddress",
+                foreignField: "_id",
+                as: "dropoffAddress",
+            },
+        },
+        {
+            $unwind: {
+                path: "$dropoffAddress",
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $lookup: {
+                from: "deliveryagents",
+                localField: "orderPickupAgentId",
+                foreignField: "_id",
+                as: "orderPickupAgentId",
+                pipeline: [
+                    {
+                        $project: {
+                            refreshToken: 0,
+                            password: 0, // Exclude the password field
+                            __v: 0,
+                        },
+                    },
+                ],
+            },
+        },
+        {
+            $unwind: {
+                path: "$orderPickupAgentId",
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $lookup: {
+                from: "deliveryagents",
+                localField: "orderDeliveryAgentId",
+                foreignField: "_id",
+                as: "orderDeliveryAgentId",
+                pipeline: [
+                    {
+                        $project: {
+                            refreshToken: 0,
+                            password: 0, // Exclude the password field
+                            __v: 0,
+                        },
+                    },
+                ],
+            },
+        },
+        {
+            $unwind: {
+                path: "$orderDeliveryAgentId",
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $facet: {
+                metadata: [{ $count: "totalCount" }],
+                data: [{ $skip: skip }, { $limit: pageSize }],
+            },
+        },
+    );
+
+    // Fetch data from the database
+    const results = await Order.aggregate(pipeline);
+    const metadata = results[0]?.metadata[0]?.totalCount || 0;
+    const orders = results[0]?.data || [];
+
+    if (orders.length === 0) {
+        return sendResponse(res, 404, null, "Orders not found");
+    }
+
     const startItem = skip + 1;
     const endItem = Math.min(
         startItem + pageSize - 1,
         startItem + orders.length - 1,
     );
-    const totalPages = Math.ceil(dataCount / pageSize);
-    if (orders.length === 0) {
-        return sendResponse(res, 404, null, "Orders not found");
-    }
+    const totalPages = Math.ceil(metadata / pageSize);
+
     return sendResponse(
         res,
         200,
@@ -540,7 +729,7 @@ exports.getAllOrderByDeliveryBoyId = asyncHandler(async (req, res) => {
             endItem,
             totalPages,
             pagesize: orders.length,
-            totalDoc: dataCount,
+            totalDoc: metadata,
         },
         "Orders fetched successfully",
     );
@@ -549,25 +738,197 @@ exports.getAllOrderByDeliveryBoyId = asyncHandler(async (req, res) => {
 exports.getOrderById = asyncHandler(async (req, res) => {
     let order;
     if (req.query.populate) {
-        order = await Order.findById(req.params.orderId)
-            .populate({
-                path: "userId",
-                select: "-__v -createdAt -updatedAt",
-            })
-            .populate({
-                path: "shopId",
-                select: "image name address partnerId",
-            })
-            .populate({
-                path: "items.item",
-                select: "name price description categoryId image_url",
-            });
+        order = await Order.aggregate([
+            { $match: { _id: new Types.ObjectId(req.params.orderId) } },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "userId",
+                    foreignField: "_id",
+                    as: "userId",
+                    pipeline: [
+                        {
+                            $project: {
+                                refreshToken: 0,
+                                password: 0, // Exclude the password field
+                                __v: 0,
+                            },
+                        },
+                    ],
+                },
+            },
+            {
+                $unwind: {
+                    path: "$userId",
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
+            {
+                $lookup: {
+                    from: "shopes",
+                    localField: "shopId",
+                    foreignField: "_id",
+                    as: "shopId",
+                    pipeline: [
+                        {
+                            $lookup: {
+                                from: "categories",
+                                localField: "category",
+                                foreignField: "_id",
+                                as: "category",
+                            },
+                        },
+                        {
+                            $lookup: {
+                                from: "partners",
+                                localField: "partnerId",
+                                foreignField: "_id",
+                                as: "partnerId",
+                                pipeline: [
+                                    {
+                                        $project: {
+                                            refreshToken: 0,
+                                            password: 0, // Exclude the password field
+                                            __v: 0,
+                                        },
+                                    },
+                                ],
+                            },
+                        },
+                        {
+                            $unwind: {
+                                path: "$partnerId",
+                                preserveNullAndEmptyArrays: true,
+                            },
+                        },
+                    ],
+                },
+            },
+            {
+                $unwind: {
+                    path: "$shopId",
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
+            {
+                $lookup: {
+                    from: "services",
+                    localField: "items._id",
+                    foreignField: "_id",
+                    as: "items",
+                    pipeline: [
+                        {
+                            $project: {
+                                __v: 0,
+                                relativePath: 0,
+                                createdAt: 0,
+                                updatedAt: 0,
+                            },
+                        },
+                        {
+                            $lookup: {
+                                from: "categories",
+                                localField: "categoryId",
+                                foreignField: "_id",
+                                as: "category",
+                                pipeline: [
+                                    {
+                                        $project: {
+                                            __v: 0,
+                                            createdAt: 0,
+                                            updatedAt: 0,
+                                            relativePath: 0,
+                                        },
+                                    },
+                                ],
+                            },
+                        },
+                    ],
+                },
+            },
+            {
+                $lookup: {
+                    from: "useraddresses",
+                    localField: "pickupAddress",
+                    foreignField: "_id",
+                    as: "pickupAddress",
+                },
+            },
+            {
+                $unwind: {
+                    path: "$pickupAddress",
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
+            {
+                $lookup: {
+                    from: "useraddresses",
+                    localField: "dropoffAddress",
+                    foreignField: "_id",
+                    as: "dropoffAddress",
+                },
+            },
+            {
+                $unwind: {
+                    path: "$dropoffAddress",
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
+            {
+                $lookup: {
+                    from: "deliveryagents",
+                    localField: "orderPickupAgentId",
+                    foreignField: "_id",
+                    as: "orderPickupAgentId",
+                    pipeline: [
+                        {
+                            $project: {
+                                refreshToken: 0,
+                                password: 0, // Exclude the password field
+                                __v: 0,
+                            },
+                        },
+                    ],
+                },
+            },
+            {
+                $unwind: {
+                    path: "$orderPickupAgentId",
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
+            {
+                $lookup: {
+                    from: "deliveryagents",
+                    localField: "orderDeliveryAgentId",
+                    foreignField: "_id",
+                    as: "orderDeliveryAgentId",
+                    pipeline: [
+                        {
+                            $project: {
+                                refreshToken: 0,
+                                password: 0, // Exclude the password field
+                                __v: 0,
+                            },
+                        },
+                    ],
+                },
+            },
+            {
+                $unwind: {
+                    path: "$orderDeliveryAgentId",
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
+        ]);
     } else {
         order = await Order.findById(req.params.orderId);
     }
+
     if (!order) {
         return sendResponse(res, 404, null, "Order not found");
     }
+
     return sendResponse(res, 200, order, "Order fetched successfully");
 });
 
@@ -604,40 +965,66 @@ exports.getAllOrders = asyncHandler(async (req, res) => {
                 from: "users",
                 localField: "userId",
                 foreignField: "_id",
-                as: "user",
+                as: "userId",
+                pipeline: [
+                    {
+                        $project: {
+                            refreshToken: 0,
+                            password: 0, // Exclude the password field
+                            __v: 0,
+                        },
+                    },
+                ],
             },
         },
         {
             $unwind: {
-                path: "$user",
+                path: "$userId",
                 preserveNullAndEmptyArrays: true,
             },
         },
         {
             $lookup: {
-                from: "shope",
+                from: "shops",
                 localField: "shopId",
-                foreignField: "_id",
-                as: "shop",
+                pipeline: [
+                    {
+                        $lookup: {
+                            as: "category",
+                            from: "categories",
+                            foreignField: "_id",
+                            localField: "category",
+                        },
+                    },
+                    {
+                        $lookup: {
+                            from: "partners", // Lookup partner data inside shopId
+                            localField: "partnerId",
+                            foreignField: "_id",
+                            as: "partnerId",
+                            pipeline: [
+                                {
+                                    $project: {
+                                        refreshToken: 0,
+                                        password: 0, // Exclude the password field
+                                        __v: 0,
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                    {
+                        $unwind: {
+                            path: "$partnerId",
+                            preserveNullAndEmptyArrays: true,
+                        },
+                    },
+                ],
             },
         },
         {
             $unwind: {
-                path: "$shop",
-                preserveNullAndEmptyArrays: true,
-            },
-        },
-        {
-            $lookup: {
-                from: "partners",
-                localField: "shop.partnerId",
-                foreignField: "_id",
-                as: "partner",
-            },
-        },
-        {
-            $unwind: {
-                path: "$partner",
+                path: "$shopId",
                 preserveNullAndEmptyArrays: true,
             },
         },
@@ -710,12 +1097,21 @@ exports.getAllOrders = asyncHandler(async (req, res) => {
                 from: "deliveryagents",
                 localField: "orderPickupAgentId",
                 foreignField: "_id",
-                as: "orderPickupAgent",
+                as: "orderPickupAgentId",
+                pipeline: [
+                    {
+                        $project: {
+                            refreshToken: 0,
+                            password: 0, // Exclude the password field
+                            __v: 0,
+                        },
+                    },
+                ],
             },
         },
         {
             $unwind: {
-                path: "$orderPickupAgent",
+                path: "$orderPickupAgentId",
                 preserveNullAndEmptyArrays: true,
             },
         },
@@ -724,12 +1120,21 @@ exports.getAllOrders = asyncHandler(async (req, res) => {
                 from: "deliveryagents",
                 localField: "orderDeliveryAgentId",
                 foreignField: "_id",
-                as: "orderDeliveryAgent",
+                as: "orderDeliveryAgentId",
+                pipeline: [
+                    {
+                        $project: {
+                            refreshToken: 0,
+                            password: 0, // Exclude the password field
+                            __v: 0,
+                        },
+                    },
+                ],
             },
         },
         {
             $unwind: {
-                path: "$orderDeliveryAgent",
+                path: "$orderDeliveryAgentId",
                 preserveNullAndEmptyArrays: true,
             },
         },
@@ -812,22 +1217,22 @@ exports.getAllOrders = asyncHandler(async (req, res) => {
 });
 
 exports.getAllOrdersByUserId = asyncHandler(async (req, res) => {
-    let dbQuery = { userId: req.params.userId };
-    const { search, startDate, populate, status } = req.query;
-    const endDate = req.query.endDate || moment().format("YYYY-MM-DD");
-    const pageNumber = parseInt(req.query.page) || 1;
-    const pageSize = parseInt(req.query.pageSize) || 10;
+    const { search, startDate, endDate, status } = req.query;
+    const pageNumber = parseInt(req.query.page, 10) || 1;
+    const pageSize = parseInt(req.query.pageSize, 10) || 10;
     const skip = (pageNumber - 1) * pageSize;
 
-    //sort by status
+    let dbQuery = { userId: new Types.ObjectId(req.params.userId) };
+
+    // Filter by status
     if (status) {
-        dbQuery.status = status;
+        dbQuery.status = Number(status);
     }
 
-    // Sort by date range
+    // Filter by date range
     if (startDate) {
         const sDate = new Date(startDate);
-        const eDate = new Date(endDate);
+        const eDate = new Date(endDate || moment().format("YYYY-MM-DD"));
         sDate.setHours(0, 0, 0, 0);
         eDate.setHours(23, 59, 59, 999);
         dbQuery.createdAt = {
@@ -836,31 +1241,203 @@ exports.getAllOrdersByUserId = asyncHandler(async (req, res) => {
         };
     }
 
-    const dataCount = await Order.countDocuments(dbQuery);
-    const orders = await Order.find(dbQuery)
-        .populate({
-            path: "userId",
-            select: "-__v -createdAt -updatedAt",
-        })
-        .populate({
-            path: "shopId",
-            select: "image name address partnerId",
-        })
-        .populate({
-            path: "items.item",
-            select: "name price description categoryId image_url",
-        })
-        .skip(skip)
-        .limit(pageSize);
+    // Build the aggregation pipeline
+    let pipeline = [
+        { $match: dbQuery },
+        {
+            $lookup: {
+                from: "users",
+                localField: "userId",
+                foreignField: "_id",
+                as: "userId",
+                pipeline: [
+                    {
+                        $project: {
+                            refreshToken: 0,
+                            password: 0,
+                            __v: 0,
+                        },
+                    },
+                ],
+            },
+        },
+        { $unwind: { path: "$userId", preserveNullAndEmptyArrays: true } },
+        {
+            $lookup: {
+                from: "shopes",
+                localField: "shopId",
+                foreignField: "_id",
+                as: "shopId",
+                pipeline: [
+                    {
+                        $lookup: {
+                            from: "partners",
+                            localField: "partnerId",
+                            foreignField: "_id",
+                            as: "partnerId",
+                            pipeline: [
+                                {
+                                    $project: {
+                                        refreshToken: 0,
+                                        password: 0,
+                                        __v: 0,
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                    {
+                        $unwind: {
+                            path: "$partnerId",
+                            preserveNullAndEmptyArrays: true,
+                        },
+                    },
+                    {
+                        $project: {
+                            image: 1,
+                            name: 1,
+                            address: 1,
+                            partnerId: 1,
+                        },
+                    },
+                ],
+            },
+        },
+        { $unwind: { path: "$shopId", preserveNullAndEmptyArrays: true } },
+        {
+            $lookup: {
+                as: "items",
+                from: "services",
+                foreignField: "_id",
+                localField: "items._id",
+                pipeline: [
+                    {
+                        $project: {
+                            __v: 0,
+                            relativePath: 0,
+                            createdAt: 0,
+                            updatedAt: 0,
+                        },
+                    },
+                    {
+                        $lookup: {
+                            from: "categories",
+                            localField: "categoryId",
+                            foreignField: "_id",
+                            as: "category",
+                            pipeline: [
+                                {
+                                    $project: {
+                                        __v: 0,
+                                        createdAt: 0,
+                                        updatedAt: 0,
+                                        relativePath: 0,
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                ],
+            },
+        },
+        {
+            $lookup: {
+                from: "useraddresses",
+                localField: "pickupAddress",
+                foreignField: "_id",
+                as: "pickupAddress",
+            },
+        },
+        {
+            $unwind: {
+                path: "$pickupAddress",
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $lookup: {
+                from: "useraddresses",
+                localField: "dropoffAddress",
+                foreignField: "_id",
+                as: "dropoffAddress",
+            },
+        },
+        {
+            $unwind: {
+                path: "$dropoffAddress",
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $lookup: {
+                from: "deliveryagents",
+                localField: "orderPickupAgentId",
+                foreignField: "_id",
+                as: "orderPickupAgentId",
+                pipeline: [
+                    {
+                        $project: {
+                            refreshToken: 0,
+                            password: 0,
+                            __v: 0,
+                        },
+                    },
+                ],
+            },
+        },
+        {
+            $unwind: {
+                path: "$orderPickupAgentId",
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $lookup: {
+                from: "deliveryagents",
+                localField: "orderDeliveryAgentId",
+                foreignField: "_id",
+                as: "orderDeliveryAgentId",
+                pipeline: [
+                    {
+                        $project: {
+                            refreshToken: 0,
+                            password: 0,
+                            __v: 0,
+                        },
+                    },
+                ],
+            },
+        },
+        {
+            $unwind: {
+                path: "$orderDeliveryAgentId",
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $facet: {
+                metadata: [{ $count: "totalCount" }],
+                data: [{ $skip: skip }, { $limit: pageSize }],
+            },
+        },
+    ];
+
+    // Fetch data from the database
+    const results = await Order.aggregate(pipeline);
+    const metadata = results[0]?.metadata[0]?.totalCount || 0;
+    const orders = results[0]?.data || [];
+
+    if (orders.length === 0) {
+        return sendResponse(res, 404, null, "Orders not found");
+    }
+
     const startItem = skip + 1;
     const endItem = Math.min(
         startItem + pageSize - 1,
         startItem + orders.length - 1,
     );
-    const totalPages = Math.ceil(dataCount / pageSize);
-    if (orders.length === 0) {
-        return sendResponse(res, 404, null, "Orders not found");
-    }
+    const totalPages = Math.ceil(metadata / pageSize);
+
     return sendResponse(
         res,
         200,
@@ -870,11 +1447,12 @@ exports.getAllOrdersByUserId = asyncHandler(async (req, res) => {
             endItem,
             totalPages,
             pagesize: orders.length,
-            totalDoc: dataCount,
+            totalDoc: metadata,
         },
         "Orders fetched successfully",
     );
 });
+
 
 exports.getOrdersByShopeId = asyncHandler(async (req, res) => {
     let dbQuery = { shopId: req.params.shopId };

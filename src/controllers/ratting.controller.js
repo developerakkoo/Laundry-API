@@ -40,7 +40,10 @@ exports.updateRatting = asyncHandler(async (req, res) => {
 });
 
 exports.getRatting = asyncHandler(async (req, res) => {
-    const ratting = await ratingModel.findById(req.params.id);
+    const ratting = await ratingModel
+        .findById(req.params.id)
+        .populate("serviceId")
+        .populate("userId");
     if (!ratting) {
         return sendResponse(res, 404, null, "Ratting not found");
     }
@@ -49,7 +52,10 @@ exports.getRatting = asyncHandler(async (req, res) => {
 
 exports.getRattingByService = asyncHandler(async (req, res) => {
     const { serviceId } = req.params;
-    const ratting = await ratingModel.find({ serviceId });
+    const ratting = await ratingModel
+        .find({ serviceId })
+        .populate("serviceId")
+        .populate("userId");
     if (!ratting) {
         return sendResponse(res, 404, null, "Ratting not found");
     }
@@ -58,7 +64,10 @@ exports.getRattingByService = asyncHandler(async (req, res) => {
 
 exports.getRattingByUser = asyncHandler(async (req, res) => {
     const { userId } = req.params;
-    const ratting = await ratingModel.find({ userId });
+    const ratting = await ratingModel
+        .find({ userId })
+        .populate("serviceId")
+        .populate("userId");
     if (!ratting) {
         return sendResponse(res, 404, null, "Ratting not found");
     }

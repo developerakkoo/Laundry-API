@@ -109,7 +109,7 @@ exports.login = asyncHandler(async (req, res) => {
         user._id,
         4,
     );
-    // user.password = "**********";
+    const partnerShop = await shopeModel.findOne({ partnerId: user._id });
     return res
         .status(200)
         .cookie("access-token", accessToken, cookieOptions)
@@ -120,6 +120,7 @@ exports.login = asyncHandler(async (req, res) => {
                 {
                     isRegistered: true,
                     userId: user._id,
+                    shop: partnerShop,
                     accessToken,
                     refreshToken,
                 },
@@ -252,7 +253,6 @@ exports.getAllPartner = asyncHandler(async (req, res) => {
         const searchRegex = createSearchRegex(search);
         dbQuery.$or = [
             { name: { $regex: searchRegex } },
-            { name: { $regex: searchRegex } },
             { phoneNumber: { $regex: searchRegex } },
         ];
     }
@@ -261,29 +261,76 @@ exports.getAllPartner = asyncHandler(async (req, res) => {
         dbQuery.status = Number(status);
     }
 
+    // Get total count of documents
     const dataCount = await partnerModel.countDocuments(dbQuery);
-    const user = await partnerModel.find(dbQuery).skip(skip).limit(pageSize);
+
+    // Aggregation pipeline with lookups and projection
+    const partners = await partnerModel.aggregate([
+        { $match: dbQuery }, // Match the search query
+        { $skip: skip }, // Pagination skip
+        { $limit: pageSize }, // Limit for pagination
+
+        // Lookup for shop data
+        {
+            $lookup: {
+                as: "shope",
+                from: "shopes",
+                foreignField: "partnerId",
+                localField: "_id",
+                pipeline: [
+                    {
+                        $lookup: {
+                            as: "category",
+                            from: "categories",
+                            foreignField: "_id",
+                            localField: "category",
+                        },
+                    },
+                ],
+            },
+        },
+
+        // Lookup for partner documents
+        {
+            $lookup: {
+                from: "partnerdocuments", // The name of the collection for partner documents
+                localField: "_id", // Local field in partnerModel
+                foreignField: "userId", // Foreign field in partnerDocument model
+                as: "partnerDocuments", // Output array field name
+            },
+        },
+
+        // Project to exclude the password field
+        {
+            $project: {
+                password: 0, // Exclude password
+            },
+        },
+    ]);
+
     const startItem = skip + 1;
     const endItem = Math.min(
         startItem + pageSize - 1,
-        startItem + user.length - 1,
+        startItem + partners.length - 1,
     );
     const totalPages = Math.ceil(dataCount / pageSize);
-    if (user.length === 0) {
-        return sendResponse(res, 404, null, "User not found");
+
+    if (partners.length === 0) {
+        return sendResponse(res, 404, null, "Partner not found");
     }
+
     return sendResponse(
         res,
         200,
         {
-            content: user,
+            content: partners,
             startItem,
             endItem,
             totalPages,
-            pagesize: user.length,
+            pageSize: partners.length,
             totalDoc: dataCount,
         },
-        "User fetched successfully",
+        "Partners fetched successfully",
     );
 });
 
@@ -394,12 +441,21 @@ exports.updateShope = asyncHandler(async (req, res) => {
     return sendResponse(res, 200, user, "Shope updated successfully");
 });
 
+
 exports.getAllShope = asyncHandler(async (req, res) => {
     let dbQuery = {};
-    const { search } = req.query;
+    const { search, latitude, longitude } = req.query;
     const pageNumber = parseInt(req.query.page) || 1;
     const pageSize = parseInt(req.query.pageSize) || 10;
     const skip = (pageNumber - 1) * pageSize;
+
+    // Ensure latitude and longitude are provided
+    if (!latitude || !longitude) {
+        return sendResponse(res, 400, null, "Latitude and longitude are required");
+    }
+
+    // const userLocation = [parseFloat(longitude), parseFloat(latitude)];
+
     // Search based on user query
     if (search) {
         const searchRegex = createSearchRegex(search);
@@ -409,30 +465,65 @@ exports.getAllShope = asyncHandler(async (req, res) => {
         ];
     }
 
-    const dataCount = await shopeModel.countDocuments(dbQuery);
-    const shope = await shopeModel.find(dbQuery).skip(skip).limit(pageSize);
-    const startItem = skip + 1;
-    const endItem = Math.min(
-        startItem + pageSize - 1,
-        startItem + shope.length - 1,
-    );
-    const totalPages = Math.ceil(dataCount / pageSize);
+    // Fetch shops without the distance (we'll add this via Google Maps API)
+    const shops = await shopeModel
+        .find(dbQuery)
+        .populate({ path: "partnerId" })
+        .populate({ path: "category" })
+        .skip(skip)
+        .limit(pageSize);
 
-    if (shope.length === 0) {
-        return sendResponse(res, 404, null, "Shope's not found");
+    if (shops.length === 0) {
+        return sendResponse(res, 404, null, "Shops not found");
     }
+
+    // Google Maps API Key
+    const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY;
+
+    // Create an array of promises to fetch the distances from Google Maps
+    const distancePromises = shops.map(async (shop) => {
+        const shopLocation = `${shop.location.coordinates[1]},${shop.location.coordinates[0]}`; // shop's latitude, longitude
+
+        // Make a request to Google Distance Matrix API to get driving distance
+        const response = await axios.get('https://maps.googleapis.com/maps/api/distancematrix/json', {
+            params: {
+                origins: `${latitude},${longitude}`, // user's location
+                destinations: shopLocation, // shop's location
+                key: googleMapsApiKey,
+                mode: 'driving',
+            },
+        });
+
+        const distanceData = response.data.rows[0].elements[0];
+
+        // Add the calculated distance (in km) to the shop object
+        return {
+            ...shop.toObject(),
+            distance: distanceData.distance ? distanceData.distance.text : 'N/A', // e.g., "5.3 km"
+            duration: distanceData.duration ? distanceData.duration.text : 'N/A', // e.g., "10 mins"
+        };
+    });
+
+    // Resolve all distance promises
+    const shopsWithDistances = await Promise.all(distancePromises);
+
+    const startItem = skip + 1;
+    const endItem = Math.min(startItem + pageSize - 1, startItem + shops.length - 1);
+    const totalPages = Math.ceil(await shopeModel.countDocuments(dbQuery) / pageSize);
+
+    // Send the response
     return sendResponse(
         res,
         200,
         {
-            content: shope,
+            content: shopsWithDistances,
             startItem,
             endItem,
             totalPages,
-            pagesize: shope.length,
-            totalDoc: dataCount,
+            pagesize: shops.length,
+            totalDoc: shops.length,
         },
-        "Shope's fetched successfully",
+        "Shops fetched successfully"
     );
 });
 

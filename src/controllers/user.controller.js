@@ -50,28 +50,48 @@ exports.registerUser = asyncHandler(async (req, res) => {
 
 exports.login = asyncHandler(async (req, res) => {
     const { phoneNumber } = req.body;
+
+    // Find user by phone number
     let user = await User.findOne({ phoneNumber });
+
+    // If user does not exist, create a new one
     if (!user) {
-        user = await User.create({
-            phoneNumber,
-        });
+        user = await User.create({ phoneNumber });
     }
-    // const isMatch = await user.isPasswordCorrect(password);
-    // if (!isMatch) {
-    //     return sendResponse(res, 400, null, "Incorrect credentials");
-    // }
+
+    // Check if user is blocked
+    if (user.status === 1) {
+        return res
+            .status(403)
+            .json(
+                new apiResponse(
+                    403,
+                    { isBlocked: true },
+                    "User is blocked by admin",
+                ),
+            );
+    }
+
+    // Generate tokens if the user is not blocked
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
         user,
         2,
     );
+
+    // Send response with tokens and user info
     return res
         .status(200)
-        .cookie("access-token", accessToken, cookieOptions)
-        .cookie("refresh-token", refreshToken, cookieOptions)
+        .cookie("access-token", accessToken, cookieOptions) // Set access token in cookie
+        .cookie("refresh-token", refreshToken, cookieOptions) // Set refresh token in cookie
         .json(
             new apiResponse(
                 200,
-                { _id: user._id, accessToken, refreshToken },
+                {
+                    _id: user._id,
+                    isBlocked: false, // User is not blocked
+                    accessToken,
+                    refreshToken,
+                },
                 "User login successful, Welcome to your account",
             ),
         );
@@ -189,10 +209,28 @@ exports.getAllUser = asyncHandler(async (req, res) => {
         },
         {
             $lookup: {
+                as: "useraddresses",
+                from: "useraddresses",
+                foreignField: "userId",
+                localField: "_id",
+            },
+        },
+        {
+            $lookup: {
                 as: "userSubscriptionDetails",
                 from: "usersubscriptions",
                 foreignField: "userId",
                 localField: "_id",
+                pipeline: [
+                    {
+                        $lookup: {
+                            as: "subscriptionplans",
+                            from: "subscriptionplans",
+                            foreignField: "_id",
+                            localField: "subscriptionPlanId",
+                        },
+                    },
+                ],
             },
         },
         {
