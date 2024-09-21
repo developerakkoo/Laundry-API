@@ -931,289 +931,122 @@ exports.getOrderById = asyncHandler(async (req, res) => {
 
     return sendResponse(res, 200, order, "Order fetched successfully");
 });
-
+const getAllOrdersNew = async (req, res) => {
+    try {
+      const {
+        orderType,
+        userId,
+        shopId,
+        status,
+        sortBy = "createdAt",  // Default sorting field
+        order = "desc",         // Sorting order (asc or desc)
+        page = 1,               // Pagination: default to page 1
+        limit = 10,             // Pagination: default to 10 orders per page
+        search                  // Search parameter (e.g., orderId)
+      } = req.query;
+  
+      // Build the query object for filtering
+      const filter = {};
+      
+      if (orderType) filter.orderType = orderType;
+      if (userId) filter.userId = userId;
+      if (shopId) filter.shopId = shopId;
+      if (status) filter.status = status;
+      
+      // Handle search (e.g., search by orderId)
+      if (search) {
+        filter.orderId = { $regex: search, $options: "i" };  // Case-insensitive search
+      }
+  
+      // Pagination logic
+      const skip = (page - 1) * limit;
+  
+      // Query the database with filters, pagination, and sorting
+      const orders = await Order.find(filter)
+        .populate("userId", "name email")  // Populating related user info
+        .populate("shopId", "name address") // Populating related shop info
+        .sort({ [sortBy]: order === "asc" ? 1 : -1 })  // Sorting
+        .skip(skip)  // Pagination skip
+        .limit(parseInt(limit));  // Pagination limit
+  
+      // Get the total count of documents for pagination info
+      const totalOrders = await Order.countDocuments(filter);
+  
+      // Respond with data
+      res.status(200).json({
+        success: true,
+        data: orders,
+        meta: {
+          totalOrders,
+          currentPage: page,
+          totalPages: Math.ceil(totalOrders / limit),
+        },
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ success: false, message: "Server Error" });
+    }
+  };
 exports.getAllOrders = asyncHandler(async (req, res) => {
-    const { search, startDate, endDate, status } = req.query;
-    const pageNumber = parseInt(req.query.page) || 1;
-    const pageSize = parseInt(req.query.pageSize) || 10;
-    const skip = (pageNumber - 1) * pageSize;
-
-    // Build the aggregation pipeline
-    let pipeline = [{ $match: {} }];
-
-    // Filter by status
-    if (status) {
-        pipeline[0].$match.status = parseInt(status);
-    }
-
-    // Sort by date range
-    if (startDate) {
-        const sDate = new Date(startDate);
-        const eDate = new Date(endDate || moment().format("YYYY-MM-DD"));
-        sDate.setHours(0, 0, 0, 0);
-        eDate.setHours(23, 59, 59, 999);
-        pipeline[0].$match.createdAt = {
-            $gte: sDate,
-            $lte: eDate,
-        };
-    }
-
-    // Populate fields
-    pipeline.push(
-        {
-            $lookup: {
-                from: "users",
-                localField: "userId",
-                foreignField: "_id",
-                as: "userId",
-                pipeline: [
-                    {
-                        $project: {
-                            refreshToken: 0,
-                            password: 0, // Exclude the password field
-                            __v: 0,
-                        },
-                    },
-                ],
-            },
-        },
-        {
-            $unwind: {
-                path: "$userId",
-                preserveNullAndEmptyArrays: true,
-            },
-        },
-        {
-            $lookup: {
-                from: "shops",
-                localField: "shopId",
-                pipeline: [
-                    {
-                        $lookup: {
-                            as: "category",
-                            from: "categories",
-                            foreignField: "_id",
-                            localField: "category",
-                        },
-                    },
-                    {
-                        $lookup: {
-                            from: "partners", // Lookup partner data inside shopId
-                            localField: "partnerId",
-                            foreignField: "_id",
-                            as: "partnerId",
-                            pipeline: [
-                                {
-                                    $project: {
-                                        refreshToken: 0,
-                                        password: 0, // Exclude the password field
-                                        __v: 0,
-                                    },
-                                },
-                            ],
-                        },
-                    },
-                    {
-                        $unwind: {
-                            path: "$partnerId",
-                            preserveNullAndEmptyArrays: true,
-                        },
-                    },
-                ],
-            },
-        },
-        {
-            $unwind: {
-                path: "$shopId",
-                preserveNullAndEmptyArrays: true,
-            },
-        },
-        {
-            $lookup: {
-                as: "items",
-                from: "services",
-                foreignField: "_id",
-                localField: "items._id",
-                pipeline: [
-                    {
-                        $project: {
-                            __v: 0,
-                            relativePath: 0,
-                            createdAt: 0,
-                            updatedAt: 0,
-                        },
-                    },
-                    {
-                        $lookup: {
-                            from: "categories",
-                            localField: "categoryId",
-                            foreignField: "_id",
-                            as: "category",
-                            pipeline: [
-                                {
-                                    $project: {
-                                        __v: 0,
-                                        createdAt: 0,
-                                        updatedAt: 0,
-                                        relativePath: 0,
-                                    },
-                                },
-                            ],
-                        },
-                    },
-                ],
-            },
-        },
-        {
-            $lookup: {
-                from: "useraddresses",
-                localField: "pickupAddress",
-                foreignField: "_id",
-                as: "pickupAddress",
-            },
-        },
-        {
-            $unwind: {
-                path: "$pickupAddress",
-                preserveNullAndEmptyArrays: true,
-            },
-        },
-        {
-            $lookup: {
-                from: "useraddresses",
-                localField: "dropoffAddress",
-                foreignField: "_id",
-                as: "dropoffAddress",
-            },
-        },
-        {
-            $unwind: {
-                path: "$dropoffAddress",
-                preserveNullAndEmptyArrays: true,
-            },
-        },
-        {
-            $lookup: {
-                from: "deliveryagents",
-                localField: "orderPickupAgentId",
-                foreignField: "_id",
-                as: "orderPickupAgentId",
-                pipeline: [
-                    {
-                        $project: {
-                            refreshToken: 0,
-                            password: 0, // Exclude the password field
-                            __v: 0,
-                        },
-                    },
-                ],
-            },
-        },
-        {
-            $unwind: {
-                path: "$orderPickupAgentId",
-                preserveNullAndEmptyArrays: true,
-            },
-        },
-        {
-            $lookup: {
-                from: "deliveryagents",
-                localField: "orderDeliveryAgentId",
-                foreignField: "_id",
-                as: "orderDeliveryAgentId",
-                pipeline: [
-                    {
-                        $project: {
-                            refreshToken: 0,
-                            password: 0, // Exclude the password field
-                            __v: 0,
-                        },
-                    },
-                ],
-            },
-        },
-        {
-            $unwind: {
-                path: "$orderDeliveryAgentId",
-                preserveNullAndEmptyArrays: true,
-            },
-        },
-        {
-            $facet: {
-                metadata: [{ $count: "totalCount" }],
-                data: [{ $skip: skip }, { $limit: pageSize }],
-            },
-        },
-    );
-
-    // Fetch data from the database
-    const results = await Order.aggregate(pipeline);
-    const metadata = results[0]?.metadata[0]?.totalCount || 0;
-    const orders = results[0]?.data || [];
-
-    // Apply search filtering using array filter method
-    if (search) {
-        const searchRegex = createSearchRegex(search);
-        const filteredOrders = orders.filter(
-            (order) =>
-                searchRegex.test(order.orderId) ||
-                searchRegex.test(order.user?.name) ||
-                searchRegex.test(order.shop?.name) ||
-                order.items.some((item) => searchRegex.test(item.item?.name)) ||
-                searchRegex.test(order.partner?.name),
-        );
-        const filteredCount = filteredOrders.length;
-        const startItem = skip + 1;
-        const endItem = Math.min(
-            startItem + pageSize - 1,
-            startItem + filteredOrders.length - 1,
-        );
-        const totalPages = Math.ceil(filteredCount / pageSize);
-
-        if (filteredOrders.length === 0) {
-            return sendResponse(res, 404, null, "Orders not found");
+  
+    try {
+        const {
+          orderType,
+          userId,
+          shopId,
+          status,
+          sortBy = "createdAt",  // Default sorting field
+          order = "desc",         // Sorting order (asc or desc)
+          page = 1,               // Pagination: default to page 1
+          limit = 10,             // Pagination: default to 10 orders per page
+          search                  // Search parameter (e.g., orderId)
+        } = req.query;
+    
+        // Build the query object for filtering
+        const filter = {};
+        
+        if (orderType) filter.orderType = orderType;
+        if (userId) filter.userId = userId;
+        if (shopId) filter.shopId = shopId;
+        if (status) filter.status = status;
+        
+        // Handle search (e.g., search by orderId)
+        if (search) {
+          filter.orderId = { $regex: search, $options: "i" };  // Case-insensitive search
         }
+    
+        // Pagination logic
+        const skip = (page - 1) * limit;
+    
+        // Query the database with filters, pagination, and sorting
+        const orders = await Order.find(filter)
+          .populate("userId", "name email")  // Populating related user info
+          .populate("shopId", "name address") // Populating related shop info
+          .sort({ [sortBy]: order === "asc" ? 1 : -1 })  // Sorting
+          .skip(skip)  // Pagination skip
+          .limit(parseInt(limit));  // Pagination limit
+    
+        // Get the total count of documents for pagination info
+        const totalOrders = await Order.countDocuments(filter);
+    
+        // Respond with data
+        res.status(200).json({
+          success: true,
+          data: orders,
+          meta: {
+            totalOrders,
+            currentPage: page,
+            totalPages: Math.ceil(totalOrders / limit),
+          },
+        });
+      } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "Server Error" });
+      }
+    
+    
 
-        return sendResponse(
-            res,
-            200,
-            {
-                content: filteredOrders.slice(skip, skip + pageSize),
-                startItem,
-                endItem,
-                totalPages,
-                pagesize: filteredOrders.length,
-                totalDoc: filteredCount,
-            },
-            "Orders fetched successfully",
-        );
-    }
-
-    // If no search filter, just return paginated results
-    const startItem = skip + 1;
-    const endItem = Math.min(
-        startItem + pageSize - 1,
-        startItem + orders.length - 1,
-    );
-    const totalPages = Math.ceil(metadata / pageSize);
-
-    if (orders.length === 0) {
-        return sendResponse(res, 404, null, "Orders not found");
-    }
-
-    return sendResponse(
-        res,
-        200,
-        {
-            content: orders,
-            startItem,
-            endItem,
-            totalPages,
-            pagesize: orders.length,
-            totalDoc: metadata,
-        },
-        "Orders fetched successfully",
-    );
+   
 });
 
 exports.getAllOrdersByUserId = asyncHandler(async (req, res) => {
