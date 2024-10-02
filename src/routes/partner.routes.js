@@ -84,6 +84,7 @@ router.get("/service/get/shopId/:id", partnerController.getAllServiceByShopeId);
 
 router.get("/service/get-all", partnerController.getAllServices);
 
+router.get("/category/getAll",partnerController.getAllCategory);
 router.delete("/service/delete/:id", partnerController.deleteService);
 
 /* Partner Dash  */

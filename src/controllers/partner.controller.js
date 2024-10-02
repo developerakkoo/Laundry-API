@@ -2,6 +2,7 @@ const partnerModel = require("../models/partner.model");
 const partnerDocumentSchema = require("../models/partnerDocument.model");
 const shopeModel = require("../models/shope.model");
 const servicesModel = require("../models/services.model");
+const categoryModel = require("../models/category.model");
 const Favorite = require("../models/favorite.model");
 const { ObjectId } = require("mongoose").Types;
 const {
@@ -1065,4 +1066,13 @@ exports.getPartnerDashData = asyncHandler(async (req, res) => {
         },
         "Partner dashboard data fetched successfully",
     );
+});
+
+
+exports.getAllCategory = asyncHandler(async (req, res) => {
+    const category = await categoryModel.find({});
+    if (category.length === 0) {
+        return sendResponse(res, 404, null, "Category not found");
+    }
+    return sendResponse(res, 200, category, "Category fetched successfully");
 });
