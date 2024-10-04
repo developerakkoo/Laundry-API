@@ -218,7 +218,7 @@ exports.updatePartnerById = asyncHandler(async (req, res) => {
 });
 
 exports.getCurrentUser = asyncHandler(async (req, res) => {
-    const id = req.user._id || req.query.userId;
+    const id = req.params.id;
 
     const user = await partnerModel.findById(id);
     if (!user) {
