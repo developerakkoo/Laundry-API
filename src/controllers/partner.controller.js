@@ -453,9 +453,9 @@ exports.getAllShope = asyncHandler(async (req, res) => {
     const skip = (pageNumber - 1) * pageSize;
 
     // Ensure latitude and longitude are provided
-    if (!latitude || !longitude) {
-        return sendResponse(res, 400, null, "Latitude and longitude are required");
-    }
+    // if (!latitude || !longitude) {
+    //     return sendResponse(res, 400, null, "Latitude and longitude are required");
+    // }
 
     // const userLocation = [parseFloat(longitude), parseFloat(latitude)];
 
@@ -481,34 +481,34 @@ exports.getAllShope = asyncHandler(async (req, res) => {
     }
 
     // Google Maps API Key
-    const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY;
+    //const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY;
 
     // Create an array of promises to fetch the distances from Google Maps
-    const distancePromises = shops.map(async (shop) => {
-        const shopLocation = `${shop.location.coordinates[1]},${shop.location.coordinates[0]}`; // shop's latitude, longitude
+    // const distancePromises = shops.map(async (shop) => {
+    //     const shopLocation = `${shop.location.coordinates[1]},${shop.location.coordinates[0]}`; // shop's latitude, longitude
 
-        // Make a request to Google Distance Matrix API to get driving distance
-        const response = await axios.get('https://maps.googleapis.com/maps/api/distancematrix/json', {
-            params: {
-                origins: `${latitude},${longitude}`, // user's location
-                destinations: shopLocation, // shop's location
-                key: googleMapsApiKey,
-                mode: 'driving',
-            },
-        });
+    //     // Make a request to Google Distance Matrix API to get driving distance
+    //     const response = await axios.get('https://maps.googleapis.com/maps/api/distancematrix/json', {
+    //         params: {
+    //             origins: `${latitude},${longitude}`, // user's location
+    //             destinations: shopLocation, // shop's location
+    //             key: googleMapsApiKey,
+    //             mode: 'driving',
+    //         },
+    //     });
 
-        const distanceData = response.data.rows[0].elements[0];
+    //     const distanceData = response.data.rows[0].elements[0];
 
-        // Add the calculated distance (in km) to the shop object
-        return {
-            ...shop.toObject(),
-            distance: distanceData.distance ? distanceData.distance.text : 'N/A', // e.g., "5.3 km"
-            duration: distanceData.duration ? distanceData.duration.text : 'N/A', // e.g., "10 mins"
-        };
-    });
+    //     // Add the calculated distance (in km) to the shop object
+    //     return {
+    //         ...shop.toObject(),
+    //         distance: distanceData.distance ? distanceData.distance.text : 'N/A', // e.g., "5.3 km"
+    //         duration: distanceData.duration ? distanceData.duration.text : 'N/A', // e.g., "10 mins"
+    //     };
+    // });
 
     // Resolve all distance promises
-    const shopsWithDistances = await Promise.all(distancePromises);
+    // const shopsWithDistances = await Promise.all(distancePromises);
 
     const startItem = skip + 1;
     const endItem = Math.min(startItem + pageSize - 1, startItem + shops.length - 1);
@@ -519,7 +519,7 @@ exports.getAllShope = asyncHandler(async (req, res) => {
         res,
         200,
         {
-            content: shopsWithDistances,
+            content: shops,
             startItem,
             endItem,
             totalPages,
