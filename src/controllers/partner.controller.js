@@ -682,6 +682,58 @@ exports.deleteShopeById = asyncHandler(async (req, res) => {
     return sendResponse(res, 200, shope._id, "Shope deleted successfully");
 });
 
+
+exports.likeShop = asyncHandler(async (req,res) =>{
+   try{
+    const {shopId, userId} = req.params;
+
+    const shop = await shopeModel.findById(shopId);
+
+    if(!shop){
+        return res.status(404).json({
+            message:"Shop not found!"
+        })
+    }
+
+    //check if user has already liked the shop
+    if(!shop.likes.includes(userId)){
+        shop.likes.push(userId);
+        await shop.save();
+    }
+
+    return res.status(201).json({
+        message:"Shop Liked successfully!",
+        likesCount: shop.likes.length
+    });
+   }
+   catch(error){
+    res.status(500).json({
+        message:error.message
+    })
+   }
+});
+
+exports.unlikeShop = async (req, res) => {
+    try {
+        const { shopId, userId } = req.params;
+
+        const shop = await shopeModel.findById(shopId);
+
+        if (!shop) {
+            return res.status(404).json({ message: 'Shop not found' });
+        }
+
+        // Check if user has liked the shop
+        if (shop.likes.includes(userId)) {
+            shop.likes = shop.likes.filter(id => id.toString() !== userId.toString());
+            await shop.save();
+        }
+
+        res.json({ message: 'Shop unliked successfully', likesCount: shop.likes.length });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
 /***** service *****/
 
 exports.createService = asyncHandler(async (req, res) => {
@@ -964,6 +1016,7 @@ exports.deleteService = asyncHandler(async (req, res) => {
 
 const moment = require("moment");
 const Order = require("../models/order.model");
+const { messaging } = require("firebase-admin");
 exports.getPartnerDashData = asyncHandler(async (req, res) => {
     const shopId = req.query.shopId;
 

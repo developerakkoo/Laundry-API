@@ -81,6 +81,13 @@ const shopSchema = new Schema(
             default: 0, // default
             enum: [0, 1, 2, 3], // pending,blocked, approved, rejected,
         },
+
+        likes:[
+            {
+                type: Schema.Types.ObjectId,
+                ref:"User"
+            }
+        ]
     },
     { timestamps: true },
 );

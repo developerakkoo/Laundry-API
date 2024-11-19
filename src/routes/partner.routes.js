@@ -57,6 +57,10 @@ router.get("/shop/get/partnerId/:id", partnerController.getAllShopeByPartnerId);
 
 router.post("/shop/get/by/category", partnerController.getShopeByCategoryId);
 
+router.post("/shop/like/:shopId/:userId", partnerController.likeShop);
+
+router.post("/shop/unlike/:shopId/:userId", partnerController.unlikeShop);
+
 router.get("/shop/get-all", partnerController.getAllShope);
 
 router.delete("/shop/delete/:id", partnerController.deleteShopeById);
