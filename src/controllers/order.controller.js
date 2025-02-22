@@ -1296,7 +1296,7 @@ exports.getUserOrderByUserId = async(req,res) =>{
         let userId = req.params.userId;
         console.log(userId);
 
-        const order = Order.find({userId: userId}).then((value) =>{
+        const order = Order.find({userId: userId}).populate("shopId").then((value) =>{
             console.log(value);
             res.status(200)
             .json({
