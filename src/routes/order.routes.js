@@ -31,6 +31,8 @@ router.get("/get/:orderId", orderController.getOrderById);
 
 router.get("/get-by/userId/:userId", orderController.getAllOrdersByUserId);
 
+router.get("/get/order/:userId", orderController.getUserOrderByUserId);
+
 router.get("/get-by/shopId/:shopId", orderController.getOrdersByShopeId);
 
 router.delete("/delete/:orderId", orderController.deleteOrderById);

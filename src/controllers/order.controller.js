@@ -241,6 +241,7 @@ exports.createOrder = asyncHandler(async (req, res) => {
         priceDetails,
         paymentDetails,
         orderType,
+        products
     } = req.body;
 
     // Find the cart for the user and populate service and shop details
@@ -259,11 +260,15 @@ exports.createOrder = asyncHandler(async (req, res) => {
     // Extract first 6 characters
     const orderId = uppercaseUuid.substring(0, 6);
 
+    console.log("THE CART");
+    console.log(cart);
+    
+    
     const order = await Order.create({
         orderId,
         userId,
         shopId: cart.shopId,
-        items: cart.products,
+        items: products,
         pickupAddress: pickupAddressId,
         dropoffAddress: dropoffAddressId,
         pickupTime,
@@ -282,7 +287,7 @@ exports.createOrder = asyncHandler(async (req, res) => {
         orderType,
     });
     // Deduct the used points from the wallet
-    useWalletPoints(userId, priceDetails.walletPointsUsed);
+    //useWalletPoints(userId, priceDetails.walletPointsUsed);
 
     // send notification to shop owner
     const shop = await shopModel.findById(cart.shopId);
@@ -1285,6 +1290,45 @@ exports.getAllOrdersByUserId = asyncHandler(async (req, res) => {
         "Orders fetched successfully",
     );
 });
+
+exports.getUserOrderByUserId = async(req,res) =>{
+    try {
+        let userId = req.params.userId;
+        console.log(userId);
+
+        const order = Order.find({userId: userId}).then((value) =>{
+            console.log(value);
+            res.status(200)
+            .json({
+                value,
+                message: "Order fetched of user"
+            })
+        }).catch((error) =>{
+            console.log(error);
+            res.status(200)
+            .json({
+                order,
+                error,
+                message:"No Orders Found For User"
+            })
+        });
+        // console.log(order);
+        let count = await Order.countDocuments();
+        console.log(`The count is:${count}`);
+        
+        
+      
+        
+    } catch (error) {
+        console.log(error);
+        
+        res.status(200)
+        .json({
+            error,
+            message:"Something went wrong!"
+        })
+    }
+}
 
 
 exports.getOrdersByShopeId = asyncHandler(async (req, res) => {

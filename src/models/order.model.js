@@ -22,13 +22,7 @@ const orderSchema = new Schema(
             required: true,
         },
         items: [
-            {
-                item: {
-                    type: Schema.Types.ObjectId,
-                    ref: "Service",
-                },
-                quantity: Number,
-            },
+            
         ],
         pickupAddress: {
             type: Schema.Types.ObjectId,
