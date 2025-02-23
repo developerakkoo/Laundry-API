@@ -41,7 +41,7 @@ exports.getUserSubscription = asyncHandler(async (req, res) => {
     const existingUserSubscription = await userSubscription.findOne({
         userId,
         status: true,
-    });
+    }).populate("subscriptionPlanId");
     if (!existingUserSubscription) {
         return sendResponse(res, 404, null, "User subscription not found");
     }
