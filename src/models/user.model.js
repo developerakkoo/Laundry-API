@@ -7,6 +7,7 @@ const userSchema = new Schema(
     {
         name: {
             type: String,
+            default:null
             // required: true,
         },
         phoneNumber: {
@@ -16,12 +17,13 @@ const userSchema = new Schema(
         email: {
             type: String,
             // required: true,
-            // unique: true,
+            default:null,
+             unique: true,
         },
         password: {
             type: String,
             // required: true,
-            select: false,
+            select: false,  
         },
         firebaseToken: {
             type: String,

@@ -114,7 +114,7 @@ exports.updateUser = asyncHandler(async (req, res) => {
     const { name, email, phoneNumber, firebaseToken, status, isOnline } =
         req.body;
     const user = await User.findByIdAndUpdate(
-        req.user._id || req.query.userId,
+         req.query.userId,
         {
             $set: {
                 name,
