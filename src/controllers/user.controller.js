@@ -138,15 +138,15 @@ exports.updateUser = asyncHandler(async (req, res) => {
     return sendResponse(res, 200, user, "User updated successfully");
 });
 exports.getCurrentUser = asyncHandler(async (req, res) => {
-    const id = req.user._id || req.query.userId;
+    const id = req.query.userId;
     const user = await User.findById(id).lean();
     if (!user) {
         return sendResponse(res, 404, null, "User not found");
     }
     // Populate the active subscriptions
     const subscriptions = await userSubscription
-        .findOne({
-            userId: new ObjectId(user._id),
+        .find({
+            userId: user._id,
             status: true,
         })
         .select("-userId -updatedAt -__v")
