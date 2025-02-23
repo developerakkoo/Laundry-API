@@ -98,7 +98,7 @@ exports.login = asyncHandler(async (req, res) => {
 });
 
 exports.logout = asyncHandler(async (req, res) => {
-    await User.findByIdAndUpdate(req.user._id, {
+    await User.findByIdAndUpdate(req.query.userId, {
         $unset: {
             refreshToken: 1,
         },
@@ -339,7 +339,7 @@ exports.deleteUserById = asyncHandler(async (req, res) => {
 exports.addAddresses = asyncHandler(async (req, res) => {
     const { type, address, landmark, pinCode, selected, lng, lat } = req.body;
     const savedAddress = await userAddress.create({
-        userId: req.query.userId || req.user._id,
+        userId: req.query.userId,
         type,
         address,
         landmark,
@@ -377,7 +377,7 @@ exports.selectAddresses = asyncHandler(async (req, res) => {
 });
 
 exports.getAllAddressesByUserId = asyncHandler(async (req, res) => {
-    const userId = req.params.userId || req.user._id;
+    const userId = req.params.userId;
     const userAddresses = await userAddress.find({ userId: userId });
     return sendResponse(
         res,
@@ -388,7 +388,7 @@ exports.getAllAddressesByUserId = asyncHandler(async (req, res) => {
 });
 
 exports.getAddressesById = asyncHandler(async (req, res) => {
-    const { addressId } = req.params;
+    const { addressId } = req.params.addressId;
     const userAddresses = await userAddress.findById(addressId);
     return sendResponse(
         res,
