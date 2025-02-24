@@ -48,7 +48,7 @@ router.get("/promoCode/get-all", promoCodeController.getAllPromoCodes);
 /************************************************************************************************************************************************************/
 
 /* Authorize access only */
-router.use(isAuthenticated);
+// router.use(isAuthenticated);
 
 router.get("/logout", adminController.logout);
 
@@ -59,20 +59,17 @@ router.post("/add-admin", adminController.addAdmin);
 router.post(
     "/add-category",
     multerUpload,
-    categoryPermission,
     categoryController.addCategory,
     categoryController.uploadCategoryImage,
 );
 
 router.get(
     "/get-categories",
-    categoryPermission,
     categoryController.getAllCategory,
 );
 
 router.get(
     "/get-category/:id",
-    categoryPermission,
     categoryController.getCategoryById,
 );
 
@@ -84,13 +81,11 @@ router.put(
 
 router.put(
     "/update-category/:id",
-    categoryPermission,
     categoryController.updateCategory,
 );
 
 router.delete(
     "/delete-category/:id",
-    categoryPermission,
     categoryController.deleteCategory,
 );
 
@@ -105,143 +100,124 @@ router.delete("/delete-user/:id", deleteUserById);
 
 router.get(
     "/get-delivery-agents",
-    deliveryAgentPermission,
     getAllDeliveryAgent,
 );
 
 router.get(
     "/get-delivery-agent/:id",
-    deliveryAgentPermission,
     getDeliveryAgentById,
 );
 
 router.put(
     "/update-delivery-agent",
-    deliveryAgentPermission,
     updateDeliveryAgent,
 );
 
 router.delete(
     "/delete-delivery-agent/:id",
-    deliveryAgentPermission,
     deleteDeliveryAgent,
 );
 
 /* Partner routes */
 
-router.get("/get-partners", partnerPermission, partnerController.getAllPartner);
+router.get("/get-partners", partnerController.getAllPartner);
 
 router.get(
     "/get-partner/:id",
-    partnerPermission,
     partnerController.getPartnerById,
 );
 
 router.put(
     "/update-partner",
-    partnerPermission,
     partnerController.updatePartnerById,
 );
 
 router.delete(
     "/delete-partner/:id",
-    partnerPermission,
     partnerController.deletePartnerById,
 );
 
 /* Shope Routes */
 
-router.post("/shop/add", shopePermission, partnerController.createShope);
+router.post("/shop/add", partnerController.createShope);
 
 router.post(
     "/shop/upload-image",
-    shopePermission,
     multerUpload,
     partnerController.uploadShopeImage,
 );
 
-router.put("/shop/update/:id", shopePermission, partnerController.updateShope);
+router.put("/shop/update/:id", partnerController.updateShope);
 
-router.get("/shop/get/:id", shopePermission, partnerController.getShopeById);
+router.get("/shop/get/:id", partnerController.getShopeById);
 
 router.get(
     "/shop/get/shopeId/:id",
-    shopePermission,
     partnerController.getShopeById,
 );
 
-router.get("/shop/get-all", shopePermission, partnerController.getAllShope);
+router.get("/shop/get-all", partnerController.getAllShope);
 
 router.delete(
     "/shop/delete/:id",
-    shopePermission,
     partnerController.deleteShopeById,
 );
 
 /* Service Routes */
 
-router.post("/service/add", servicePermission, partnerController.createService);
+router.post("/service/add", partnerController.createService);
 
 router.post(
     "/service/upload-image",
-    servicePermission,
     multerUpload,
     partnerController.uploadServiceImage,
 );
 
 router.put(
     "/service/update/:id",
-    servicePermission,
     partnerController.updateService,
 );
 
 router.get(
     "/service/get/:id",
-    servicePermission,
     partnerController.getServiceById,
 );
 
 router.get(
     "/service/get/categoryId/:id",
-    servicePermission,
     partnerController.getAllServiceByCategoryId,
 );
 
 router.get(
     "/service/shopeId/:id",
-    servicePermission,
     partnerController.getAllServiceByShopeId,
 );
 
 router.get(
     "/service/get-all",
-    servicePermission,
     partnerController.getAllServices,
 );
 
 router.delete(
     "/service/delete/:id",
-    servicePermission,
     partnerController.deleteService,
 );
 
 /***** Order Routes *****/
 
-router.put("/order/:orderId/complete", orderPermission, changeOrderStatus);
+router.put("/order/:orderId/complete", changeOrderStatus);
 
 router.put(
     "/order/:orderId/assignDeliveryBoy/:deliveryBoyId",
-    orderPermission,
     assignDeliveryBoyToOrder,
 );
 
 router.put(
     "/order/:orderId/changeStatus/:status",
-    orderPermission,
     changeOrderStatus,
 );
 
-router.get("/order/get", orderPermission, getAllOrders);
+router.get("/order/get", getAllOrders);
 
 router.delete("/order/delete-data", bulkDelete);
 
@@ -249,31 +225,26 @@ router.delete("/order/delete-data", bulkDelete);
 
 router.post(
     "/cashback/add",
-    cashbackOfferPermission,
     adminController.addCashbackOffer,
 );
 
 router.get(
     "/cashback/get/:id",
-    cashbackOfferPermission,
     adminController.getCashbackOfferById,
 );
 
 router.get(
     "/cashback/get-all",
-    cashbackOfferPermission,
     adminController.getAllCashbackOffer,
 );
 
 router.put(
     "/cashback/update/:id",
-    cashbackOfferPermission,
     adminController.updateCashbackOffer,
 );
 
 router.delete(
     "/cashback/delete/:id",
-    cashbackOfferPermission,
     adminController.deleteCashbackOffer,
 );
 

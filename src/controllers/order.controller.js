@@ -1367,7 +1367,7 @@ exports.getOrdersByShopeId = asyncHandler(async (req, res) => {
             select: "image name address partnerId",
         })
         .populate({
-            path: "items.item",
+            path: "items",
             select: "name price description categoryId image_url",
         })
         .skip(skip)
