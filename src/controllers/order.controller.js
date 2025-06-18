@@ -443,7 +443,7 @@ exports.assignDeliveryBoyToOrder = asyncHandler(async (req, res) => {
             status: "ASSIGNED_DELIVERY_AGENT",
             dateTime: moment().format("MMMM Do YYYY, h:mm:ss a"),
         });
-        order.status = 6;
+        order.status = 2;
         //send notification to delivery agent
         sendNotification(
             orderDeliveryAgentId,
@@ -473,9 +473,17 @@ exports.changeOrderStatus = asyncHandler(async (req, res) => {
         });
         sendNotification(order.userId, "Your Order is confirmed", order);
     }
+    if (status == 2) {
+        order.orderTimeline.push({
+            title: "Delivery Partner Assigned",
+            status: "PICKUP_STARTED",
+            dateTime: moment().format("MMMM Do YYYY, h:mm:ss a"),
+        });
+        sendNotification(order.userId, "Your Order is confirmed", order);
+    }
     if (status == 4) {
         order.orderTimeline.push({
-            title: "Order On The Way",
+            title: "Order is in process",
             status: "ORDER_ON_THE_WAY",
             dateTime: moment().format("MMMM Do YYYY, h:mm:ss a"),
         });
@@ -1054,6 +1062,47 @@ exports.getAllOrders = asyncHandler(async (req, res) => {
    
 });
 
+
+exports.getOrderByStatus = async (req, res) => {
+    try {
+      let { status } = req.query;
+  
+      if (!status) {
+        return res.status(400).json({ message: "Missing status parameter" });
+      }
+  
+      status = parseInt(status); // cast to number
+  
+      if (isNaN(status) || status < 0 || status > 8) {
+        return res.status(400).json({ message: "Invalid status value" });
+      }
+      const populateAllOrderFields = [
+        { path: "userId", select: "-password" },
+        { path: "shopId" },
+        { path: "pickupAddress" },
+        { path: "dropoffAddress" },
+        { path: "orderPickupAgentId" },
+        { path: "orderDeliveryAgentId" },
+        { path: "promoCode" },
+      ];
+      const orders = await Order.find({ status }).populate(populateAllOrderFields);
+  
+      if (orders.length > 0) {
+        return res.status(200).json({
+          message: "Orders Found!",
+          orders,
+        });
+      }
+  
+      return res.status(404).json({
+        message: "No Orders Found!",
+        orders: [],
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ success: false, message: "Server Error" });
+    }
+  };
 exports.getAllOrdersByUserId = asyncHandler(async (req, res) => {
     const { search, startDate, endDate, status } = req.query;
     const pageNumber = parseInt(req.query.page, 10) || 1;

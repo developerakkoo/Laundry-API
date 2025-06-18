@@ -176,30 +176,19 @@ exports.uploadProfileImage = asyncHandler(async (req, res) => {
 
 exports.updatePartnerById = asyncHandler(async (req, res) => {
     const {
-        userId,
         name,
         email,
         phoneNumber,
-        status,
-        password,
-        confirmPassword,
+     
     } = req.body;
 
+    const userId = req.params.id;
     const isExistUser = await partnerModel.findById(userId);
 
     if (!isExistUser) {
         return sendResponse(res, 404, null, "User not found");
     }
-    if (password) {
-        if (password !== confirmPassword) {
-            return sendResponse(res, 401, null, "Invalid credentials");
-        }
-        const user = await partnerModel.findById(userId);
-        user.password = password;
-        await user.save({ validateBeforeSave: false });
-        user.password = "**********";
-        return sendResponse(res, 200, user, "User updated successfully");
-    }
+   
     const user = await partnerModel.findByIdAndUpdate(
         userId || req.params.id,
         {
@@ -207,7 +196,6 @@ exports.updatePartnerById = asyncHandler(async (req, res) => {
                 name,
                 email,
                 phoneNumber,
-                status,
             },
         },
         {

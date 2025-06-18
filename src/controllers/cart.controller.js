@@ -54,7 +54,7 @@ exports.addToCart = asyncHandler(async (req, res) => {
 
     // Update quantity if the product already exists in the cart
     if (productIndex > -1) {
-        cart.products[productIndex].quantity += quantity;
+        cart.products[productIndex].quantity += 1;
     } else {
         // Add new product to the cart
         cart.products.push({ serviceId, quantity });

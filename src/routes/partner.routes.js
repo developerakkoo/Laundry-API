@@ -30,7 +30,7 @@ router.post(
     partnerController.uploadProfileImage,
 );
 
-router.put("/update-profile", partnerController.updatePartnerById);
+router.put("/update-profile/:id", partnerController.updatePartnerById);
 
 /* Authorize access only */
 // router.use(isAuthenticated);

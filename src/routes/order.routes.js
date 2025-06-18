@@ -18,7 +18,7 @@ router.post(
     orderController.verifyOtpAndUpdateOrderStatus,
 );
 
-router.put("/update/status", orderController.changeOrderStatus);
+router.put("/update/order-status", orderController.changeOrderStatus);
 
 router.put("/assign/deliveryAgent", orderController.assignDeliveryBoyToOrder);
 
@@ -27,6 +27,7 @@ router.get(
     orderController.getAllOrderByDeliveryBoyId,
 );
 
+router.get("/get/status", orderController.getOrderByStatus);
 router.get("/get/:orderId", orderController.getOrderById);
 
 router.get("/get-by/userId/:userId", orderController.getAllOrdersByUserId);
