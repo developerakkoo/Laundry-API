@@ -2,9 +2,9 @@ const { Schema, model } = require("mongoose");
 
 const ratingSchema = new Schema(
     {
-        serviceId: {
+        shopId: {
             type: Schema.Types.ObjectId,
-            ref: "Service",
+            ref: "Shope",
             required: true,
         },
         userId: {
@@ -15,9 +15,7 @@ const ratingSchema = new Schema(
         description: {
             type: String,
         },
-        images: {
-            type: [String],
-        },
+      
         star: {
             type: Number,
             required: true,

@@ -4,33 +4,28 @@ const { asyncHandler, sendResponse } = require("../utils/helper.utils");
 const { Types } = require("mongoose");
 
 exports.addRatting = asyncHandler(async (req, res) => {
-    const { userId, serviceId, description, star } = req.body;
-    const images = req.files
-        ? req.files.map(
-              (file) => `https://${req.hostname}/uploads/${file.filename}`,
-          )
-        : [];
-    const isExistRatting = await ratingModel.findOne({ userId, serviceId });
+    const { userId, shopId, description, star } = req.body;
+ 
+    const isExistRatting = await ratingModel.findOne({ userId, shopId });
     if (isExistRatting) {
         return sendResponse(res, 400, null, "Ratting already exist");
     }
     const ratting = await ratingModel.create({
         userId,
-        serviceId,
+        shopId,
         description,
         star,
-        images,
     });
     return sendResponse(res, 200, ratting, "Ratting added successfully");
 });
 
 exports.updateRatting = asyncHandler(async (req, res) => {
-    const { userId, serviceId, description, star } = req.body;
+    const { userId, shopId, description, star } = req.body;
     const ratting = await ratingModel.findOneAndUpdate(
         { userId, serviceId },
         {
             userId,
-            serviceId,
+            shopId,
             description,
             star,
         },
@@ -42,7 +37,7 @@ exports.updateRatting = asyncHandler(async (req, res) => {
 exports.getRatting = asyncHandler(async (req, res) => {
     const ratting = await ratingModel
         .findById(req.params.id)
-        .populate("serviceId")
+        .populate("shopId")
         .populate("userId");
     if (!ratting) {
         return sendResponse(res, 404, null, "Ratting not found");
@@ -51,10 +46,10 @@ exports.getRatting = asyncHandler(async (req, res) => {
 });
 
 exports.getRattingByService = asyncHandler(async (req, res) => {
-    const { serviceId } = req.params;
+    const { shopId } = req.params;
     const ratting = await ratingModel
-        .find({ serviceId })
-        .populate("serviceId")
+        .find({ shopId })
+        .populate("shopId")
         .populate("userId");
     if (!ratting) {
         return sendResponse(res, 404, null, "Ratting not found");
@@ -66,7 +61,7 @@ exports.getRattingByUser = asyncHandler(async (req, res) => {
     const { userId } = req.params;
     const ratting = await ratingModel
         .find({ userId })
-        .populate("serviceId")
+        .populate("shopId")
         .populate("userId");
     if (!ratting) {
         return sendResponse(res, 404, null, "Ratting not found");
@@ -82,9 +77,9 @@ exports.deleteRating = asyncHandler(async (req, res) => {
     return sendResponse(res, 200, null, "Ratting deleted successfully");
 });
 exports.getRattingStatsByService = asyncHandler(async (req, res) => {
-    const { serviceId } = req.params;
+    const { shopId } = req.params;
     const stats = await ratingModel.aggregate([
-        { $match: { serviceId: new Types.ObjectId(serviceId) } },
+        { $match: { serviceId: new Types.ObjectId(shopId) } },
         // Group by star and calculate the count of each star
         {
             $group: {

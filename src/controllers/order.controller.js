@@ -226,7 +226,9 @@ exports.initiatePayment = asyncHandler(async (req, res) => {
     };
 
     const order = await instance.orders.create(options);
-    sendResponse(res, 200, order, "Order Created.");
+   if(order){
+    res.status(200).json({message: "Order Created", order});
+   }
 });
 
 // Create an order
@@ -300,6 +302,7 @@ exports.createOrder = asyncHandler(async (req, res) => {
         getIO().emit(shop.partnerId, order);
     }
 
+    getIO().emit("newOrder", order);
     // Clear the cart after placing the order
     await Cart.deleteOne({ userId });
 
@@ -1418,6 +1421,10 @@ exports.getOrdersByShopeId = asyncHandler(async (req, res) => {
         .populate({
             path: "items",
             select: "name price description categoryId image_url",
+        }).populate({
+            path:"pickupAddress",
+        }).populate({
+            path:"dropoffAddress",
         })
         .skip(skip)
         .limit(pageSize);

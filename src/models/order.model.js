@@ -21,6 +21,16 @@ const orderSchema = new Schema(
             ref: "Shope",
             required: true,
         },
+        pickupImage:{
+            type: String,
+        },
+        dropImage:{
+            type: String,
+        },
+
+        weightInKGOnPickup: {
+            type: Number,
+        },
         items: [
             
         ],

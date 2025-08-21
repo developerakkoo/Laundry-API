@@ -6,7 +6,7 @@ const { upload } = require("../middlewares/fileHandler.middleware");
 /* Authorize access only */
 // router.use(isAuthenticated);
 
-router.post("/add", upload.array("image", 5), rattingController.addRatting);
+router.post("/add", rattingController.addRatting);
 
 router.put("/update", rattingController.updateRatting);
 

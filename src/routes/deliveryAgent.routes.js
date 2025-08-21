@@ -7,6 +7,7 @@ router.post("/register", deliveryAgentController.register);
 
 router.post("/login", deliveryAgentController.login);
 
+router.get('/get/:id', deliveryAgentController.getDeliveryAgentById);
 router.put(
     "/update-profile-image",
     multerUpload,

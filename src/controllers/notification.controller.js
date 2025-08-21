@@ -20,7 +20,10 @@ exports.sendNotification = async (
             title,
             content,
         });
-        getIO().emit(userId, notification);
+        if(notification){
+            getIO().emit(userId, notification);
+
+        }
         if (role == 1) {
             const user = await userModel.findById(userId);
             if (user && user?.firebaseToken) {
