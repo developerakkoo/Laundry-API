@@ -1003,67 +1003,109 @@ const getAllOrdersNew = async (req, res) => {
       res.status(500).json({ success: false, message: "Server Error" });
     }
   };
-exports.getAllOrders = asyncHandler(async (req, res) => {
-  
+  exports.getAllOrders = asyncHandler(async (req, res) => {
     try {
-        const {
-          orderType,
-          userId,
-          shopId,
-          status,
-          sortBy = "createdAt",  // Default sorting field
-          order = "desc",         // Sorting order (asc or desc)
-          page = 1,               // Pagination: default to page 1
-          limit = 10,             // Pagination: default to 10 orders per page
-          search                  // Search parameter (e.g., orderId)
-        } = req.query;
-    
-        // Build the query object for filtering
-        const filter = {};
-        
-        if (orderType) filter.orderType = orderType;
-        if (userId) filter.userId = userId;
-        if (shopId) filter.shopId = shopId;
-        if (status) filter.status = status;
-        
-        // Handle search (e.g., search by orderId)
-        if (search) {
-          filter.orderId = { $regex: search, $options: "i" };  // Case-insensitive search
-        }
-    
-        // Pagination logic
-        const skip = (page - 1) * limit;
-    
-        // Query the database with filters, pagination, and sorting
-        const orders = await Order.find(filter)
-          .populate("userId", "name email")  // Populating related user info
-          .populate("shopId", "name address") // Populating related shop info
-          .sort({ [sortBy]: order === "asc" ? 1 : -1 })  // Sorting
-          .skip(skip)  // Pagination skip
-          .limit(parseInt(limit));  // Pagination limit
-    
-        // Get the total count of documents for pagination info
-        const totalOrders = await Order.countDocuments(filter);
-    
-        // Respond with data
-        res.status(200).json({
-          success: true,
-          data: orders,
-          meta: {
-            totalOrders,
-            currentPage: page,
-            totalPages: Math.ceil(totalOrders / limit),
-          },
-        });
-      } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, message: "Server Error" });
+      const {
+        searchTerm,        // Changed from 'search' to match frontend
+        startDate,         // Added start date filter
+        endDate,           // Added end date filter
+        status,            // Status filter
+        sortBy = "createdAt",  // Default sorting field
+        order = "desc",         // Sorting order (asc or desc)
+        page = 1,               // Pagination: default to page 1
+        limit = 10,             // Pagination: default to 10 orders per page
+        orderType,              // Order type filter
+        userId,                 // User ID filter
+        shopId                  // Shop ID filter
+      } = req.query;
+  
+      // Build the query object for filtering
+      const filter = {};
+      
+      // Handle search by orderId
+      if (searchTerm && searchTerm.trim() !== '') {
+        filter.orderId = { $regex: searchTerm.trim(), $options: "i" };
       }
-    
-    
-
-   
-});
+      
+      // Handle status filter (convert to number)
+      if (status !== undefined && status !== '') {
+        filter.status = parseInt(status);
+      }
+      
+      // Handle date range filtering
+      if (startDate && endDate) {
+        filter.createdAt = {
+          $gte: new Date(startDate),
+          $lte: new Date(endDate + 'T23:59:59.999Z') // Include entire end date
+        };
+      } else if (startDate) {
+        filter.createdAt = {
+          $gte: new Date(startDate)
+        };
+      } else if (endDate) {
+        filter.createdAt = {
+          $lte: new Date(endDate + 'T23:59:59.999Z')
+        };
+      }
+      
+      // Handle other filters
+      if (orderType !== undefined && orderType !== '') {
+        filter.orderType = parseInt(orderType);
+      }
+      if (userId && userId.trim() !== '') {
+        filter.userId = userId;
+      }
+      if (shopId && shopId.trim() !== '') {
+        filter.shopId = shopId;
+      }
+  
+      // Convert page and limit to numbers
+      const pageNum = parseInt(page) || 1;
+      const limitNum = parseInt(limit) || 10;
+      
+      // Pagination logic
+      const skip = (pageNum - 1) * limitNum;
+  
+      console.log('Filter applied:', filter); // Debug log
+  
+      // Query the database with filters, pagination, and sorting
+      const orders = await Order.find(filter)
+        .populate("userId", "name email")
+        .populate("shopId", "name address")
+        .sort({ [sortBy]: order === "asc" ? 1 : -1 })
+        .skip(skip)
+        .limit(limitNum);
+  
+      // Get the total count of documents for pagination info
+      const totalOrders = await Order.countDocuments(filter);
+  
+      // Calculate total pages
+      const totalPages = Math.ceil(totalOrders / limitNum);
+  
+      console.log(`Found ${orders.length} orders out of ${totalOrders} total`); // Debug log
+  
+      // Respond with data
+      res.status(200).json({
+        success: true,
+        data: orders,
+        meta: {
+          totalOrders,
+          currentPage: pageNum,
+          totalPages: totalPages,
+          hasNextPage: pageNum < totalPages,
+          hasPrevPage: pageNum > 1
+        },
+      });
+      
+    } catch (err) {
+      console.error('Error in getAllOrders:', err);
+      res.status(500).json({ 
+        success: false, 
+        message: "Server Error",
+        error: err.message 
+      });
+    }
+  });
 
 
 exports.getOrderByStatus = async (req, res) => {
