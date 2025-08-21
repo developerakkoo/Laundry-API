@@ -33,5 +33,6 @@ router.get("/logout", deliveryAgentController.logout);
 router.post("/add/ratting", deliveryAgentController.addRattingToDeliveryAgent);
 
 router.get("/get/ratings", deliveryAgentController.getAverageRating);
+router.get('/get/earnings/:agentId', deliveryAgentController.getAgentOrdersCompPlain);
 
 module.exports = { deliveryAgentRoutes: router };

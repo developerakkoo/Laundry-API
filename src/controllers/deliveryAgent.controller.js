@@ -1,7 +1,10 @@
 const deliveryAgentModel = require("../models/deliveryAgent.model");
 const deliveryAgentDocumentModel = require("../models/deliveryAgentDocument.model");
 const deliveryAgentRating = require("../models/deliveryAgentRating.model");
+const Payout = require('../models/payout.model');
+const Order = require("../models/order.model"); 
 const { ObjectId } = require("mongoose").Types;
+const mongoose = require("mongoose");
 const { cookieOptions } = require("../constant");
 const {
     asyncHandler,
@@ -328,3 +331,54 @@ exports.getAverageRating = asyncHandler(async (deliveryAgentId) => {
     const data = result.length > 0 ? result[0].averageRating : 0;
     sendResponse(res, 200, data, "Average rating calculated successfully.");
 });
+
+
+/**
+ * GET /delivery-agents/:agentId/earnings/by-orders
+ * Query params:
+ * - startDate?: ISO
+ * - endDate?: ISO
+ * - role?: 'pickup' | 'delivery' | 'both'  (default: 'both')
+ * - onlyCompleted?: 'true' | 'false'       (default: 'false')
+ * - settled?: 'all' | 'true' | 'false'     (default: 'all')
+ * - includePayoutInfo?: 'true' | 'false'   (default: 'true')
+ * - page?: number                          (default: 1)
+ * - limit?: number                         (default: 20)
+ * - sort?: 'date' | '-date'                (default: '-date')
+ * - dateField?: 'createdAt' | 'completedAt' (default: 'createdAt')
+ */
+// …imports unchanged…
+
+// GET /delivery-agents/:agentId/earnings/simple
+exports.getAgentOrdersCompPlain = async (req, res) => {
+    try {
+      const agentId = String(req.params.agentId || '').trim();
+  
+      // Match this agent in pickup OR delivery (ObjectId or string)
+      const orConds = [];
+      if (mongoose.Types.ObjectId.isValid(agentId)) {
+        const oid = new mongoose.Types.ObjectId(agentId);
+        orConds.push({ orderPickupAgentId: oid }, { orderDeliveryAgentId: oid });
+      }
+      orConds.push({ orderPickupAgentId: agentId }, { orderDeliveryAgentId: agentId });
+  
+      const orders = await Order.find({ $or: orConds })
+        .select('orderId status createdAt orderPickupAgentId orderDeliveryAgentId priceDetails.deliveryBoyCompensation')
+        .lean();
+  
+      const items = orders.map(o => ({
+        _id: o._id,
+        orderId: o.orderId,
+        status: o.status,
+        createdAt: o.createdAt,
+        pickupAgentId: o.orderPickupAgentId,
+        deliveryAgentId: o.orderDeliveryAgentId,
+        compensation: Number(o?.priceDetails?.deliveryBoyCompensation) || 0
+      }));
+  
+      return res.json({ success: true, data: items });
+    } catch (err) {
+      console.error('getAgentOrdersCompPlain error', err);
+      return res.status(500).json({ success: false, message: err.message });
+    }
+  };

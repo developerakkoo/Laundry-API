@@ -186,6 +186,7 @@ exports.updatePartnerById = asyncHandler(async (req, res) => {
     const isExistUser = await partnerModel.findById(userId);
 
     if (!isExistUser) {
+        
         return sendResponse(res, 404, null, "User not found");
     }
    
