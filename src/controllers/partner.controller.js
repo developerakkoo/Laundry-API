@@ -14,6 +14,8 @@ const {
     createSearchRegex,
 } = require("../utils/helper.utils");
 const { cookieOptions } = require("../constant");
+const Order = require("../models/order.model");
+const { calculatePartnerEarnings } = require("../utils/helper.utils");
 
 exports.registerUser = asyncHandler(async (req, res, next) => {
     const { name, email, phoneNumber } = req.body;
@@ -205,6 +207,53 @@ exports.updatePartnerById = asyncHandler(async (req, res) => {
     );
     return sendResponse(res, 200, user, "User updated successfully");
 });
+
+/**
+ * Get partner earnings for a shop or a particular order
+ */
+exports.getPartnerEarnings = asyncHandler(async (req, res) => {
+    const { shopId, orderId } = req.query;
+
+    let orders;
+    if (orderId) {
+        // Single order
+        orders = await Order.find({ _id: orderId });
+    } else if (shopId) {
+        // All orders for a shop
+        orders = await Order.find({ shopId: new ObjectId(shopId) });
+    } else {
+        return sendResponse(res, 400, null, "shopId or orderId is required");
+    }
+
+    if (!orders || orders.length === 0) {
+        return sendResponse(res, 404, null, "No orders found");
+    }
+
+    const earningsData = orders.map((order) => {
+        const {
+            priceDetails: { totalAmountToPay },
+            operationalCosts = 0,
+            serviceFees = 0,
+            commissionPercentage = 70, // Default 70%
+        } = order;
+
+        return calculatePartnerEarnings(
+            commissionPercentage,
+            totalAmountToPay,
+            operationalCosts,
+            serviceFees
+        );
+    });
+
+    // Sum up total earnings if multiple orders
+    const totalEarnings = earningsData.reduce(
+        (sum, item) => sum + item.totalEarnings,
+        0
+    );
+
+    return sendResponse(res, 200, { totalEarnings, earningsData }, "Partner earnings fetched successfully");
+});
+
 
 exports.getCurrentUser = asyncHandler(async (req, res) => {
     const id = req.params.id;
@@ -1004,7 +1053,7 @@ exports.deleteService = asyncHandler(async (req, res) => {
 });
 
 const moment = require("moment");
-const Order = require("../models/order.model");
+// const Order = require("../models/order.model");
 const { messaging } = require("firebase-admin");
 exports.getPartnerDashData = asyncHandler(async (req, res) => {
     const shopId = req.query.shopId;

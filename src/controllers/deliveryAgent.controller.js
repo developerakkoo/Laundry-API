@@ -2,7 +2,7 @@ const deliveryAgentModel = require("../models/deliveryAgent.model");
 const deliveryAgentDocumentModel = require("../models/deliveryAgentDocument.model");
 const deliveryAgentRating = require("../models/deliveryAgentRating.model");
 const Payout = require('../models/payout.model');
-const Order = require("../models/order.model"); 
+const Order = require("../models/order.model");
 const { ObjectId } = require("mongoose").Types;
 const mongoose = require("mongoose");
 const { cookieOptions } = require("../constant");
@@ -14,6 +14,7 @@ const {
     generateAccessAndRefreshTokens,
 } = require("../utils/helper.utils");
 const moment = require("moment");
+const { calculateDriverEarnings } = require("../utils/helper.utils");
 
 exports.register = asyncHandler(async (req, res) => {
     const { name, email, phoneNumber, password } = req.body;
@@ -165,6 +166,50 @@ exports.getCurrentUser = asyncHandler(async (req, res) => {
         return sendResponse(res, 404, null, "User not found");
     }
     return sendResponse(res, 200, user, "User fetched successfully");
+});
+
+/**
+ * Get driver earnings for a delivery agent
+ */
+exports.getDriverEarnings = asyncHandler(async (req, res) => {
+    const { deliveryAgentId } = req.query;
+
+    if (!deliveryAgentId) {
+        return sendResponse(res, 400, null, "deliveryAgentId is required");
+    }
+
+    // Fetch delivered orders assigned to this driver
+    const orders = await Order.find({ deliveryAgentId });
+
+    if (!orders || orders.length === 0) {
+        return sendResponse(res, 404, null, "No orders found for this driver");
+    }
+
+    const earningsData = orders.map((order) => {
+        const {
+            distance = 0,
+            weight = 0,
+            baseRate = 15,       // Default base rate
+            ratePerUnit = 5,     // Default rate per kg
+            tips = 0,            // Tips/Incentives
+        } = order;
+
+        return calculateDriverEarnings(
+            baseRate,
+            distance,
+            weight,
+            ratePerUnit,
+            tips
+        );
+    });
+
+    // Sum up total earnings
+    const totalEarnings = earningsData.reduce(
+        (sum, item) => sum + item.totalEarnings,
+        0
+    );
+
+    return sendResponse(res, 200, { totalEarnings, earningsData }, "Driver earnings fetched successfully");
 });
 
 exports.getDeliveryAgentById = asyncHandler(async (req, res) => {
@@ -352,33 +397,33 @@ exports.getAverageRating = asyncHandler(async (deliveryAgentId) => {
 // GET /delivery-agents/:agentId/earnings/simple
 exports.getAgentOrdersCompPlain = async (req, res) => {
     try {
-      const agentId = String(req.params.agentId || '').trim();
-  
-      // Match this agent in pickup OR delivery (ObjectId or string)
-      const orConds = [];
-      if (mongoose.Types.ObjectId.isValid(agentId)) {
-        const oid = new mongoose.Types.ObjectId(agentId);
-        orConds.push({ orderPickupAgentId: oid }, { orderDeliveryAgentId: oid });
-      }
-      orConds.push({ orderPickupAgentId: agentId }, { orderDeliveryAgentId: agentId });
-  
-      const orders = await Order.find({ $or: orConds })
-        .select('orderId status createdAt orderPickupAgentId orderDeliveryAgentId priceDetails.deliveryBoyCompensation')
-        .lean();
-  
-      const items = orders.map(o => ({
-        _id: o._id,
-        orderId: o.orderId,
-        status: o.status,
-        createdAt: o.createdAt,
-        pickupAgentId: o.orderPickupAgentId,
-        deliveryAgentId: o.orderDeliveryAgentId,
-        compensation: Number(o?.priceDetails?.deliveryBoyCompensation) || 0
-      }));
-  
-      return res.json({ success: true, data: items });
+        const agentId = String(req.params.agentId || '').trim();
+
+        // Match this agent in pickup OR delivery (ObjectId or string)
+        const orConds = [];
+        if (mongoose.Types.ObjectId.isValid(agentId)) {
+            const oid = new mongoose.Types.ObjectId(agentId);
+            orConds.push({ orderPickupAgentId: oid }, { orderDeliveryAgentId: oid });
+        }
+        orConds.push({ orderPickupAgentId: agentId }, { orderDeliveryAgentId: agentId });
+
+        const orders = await Order.find({ $or: orConds })
+            .select('orderId status createdAt orderPickupAgentId orderDeliveryAgentId priceDetails.deliveryBoyCompensation')
+            .lean();
+
+        const items = orders.map(o => ({
+            _id: o._id,
+            orderId: o.orderId,
+            status: o.status,
+            createdAt: o.createdAt,
+            pickupAgentId: o.orderPickupAgentId,
+            deliveryAgentId: o.orderDeliveryAgentId,
+            compensation: Number(o?.priceDetails?.deliveryBoyCompensation) || 0
+        }));
+
+        return res.json({ success: true, data: items });
     } catch (err) {
-      console.error('getAgentOrdersCompPlain error', err);
-      return res.status(500).json({ success: false, message: err.message });
+        console.error('getAgentOrdersCompPlain error', err);
+        return res.status(500).json({ success: false, message: err.message });
     }
-  };
+};

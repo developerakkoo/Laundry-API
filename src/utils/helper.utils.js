@@ -215,6 +215,58 @@ function generateOTP() {
     return otp;
 }
 
+/**
+ * ==========================
+ * 🚚 DRIVER EARNINGS FORMULA
+ * ==========================
+ * Formula:
+ * Earnings = (Base Rate × Distance) + (Weight/Volume × Rate per Unit) + (Tips/Incentives)
+ */
+exports.calculateDriverEarnings = (baseRate, distance, weightOrVolume, ratePerUnit, tipsOrIncentives = 0) => {
+    const distanceEarnings = baseRate * distance;
+    const weightEarnings = weightOrVolume * ratePerUnit;
+    const totalEarnings = distanceEarnings + weightEarnings + tipsOrIncentives;
+
+    return {
+        totalEarnings,
+        breakdown: {
+            baseRate,
+            distance,
+            distanceEarnings,
+            weightOrVolume,
+            ratePerUnit,
+            weightEarnings,
+            tipsOrIncentives
+        }
+    };
+};
+
+/**
+ * ==========================
+ * 🧺 PARTNER EARNINGS FORMULA
+ * ==========================
+ * Formula:
+ * Earnings = (Commission Percentage × Total Order Value) − (Operational Costs + Service Fees)
+ */
+exports.calculatePartnerEarnings = (commissionPercentage, totalOrderValue, operationalCosts, serviceFees) => {
+    const commissionAmount = (commissionPercentage / 100) * totalOrderValue;
+    const totalCosts = operationalCosts + serviceFees;
+    const totalEarnings = commissionAmount - totalCosts;
+
+    return {
+        totalEarnings: Math.max(0, totalEarnings),
+        breakdown: {
+            commissionPercentage,
+            totalOrderValue,
+            commissionAmount,
+            operationalCosts,
+            serviceFees,
+            totalCosts
+        }
+    };
+};
+
+
 module.exports = {
     apiError,
     apiResponse,

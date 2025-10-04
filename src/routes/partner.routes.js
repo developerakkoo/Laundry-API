@@ -95,4 +95,7 @@ router.delete("/service/delete/:id", partnerController.deleteService);
 
 router.get("/dashboard/stats", partnerController.getPartnerDashData);
 
+// Earnings
+router.get("/earnings", partnerController.getPartnerEarnings);
+
 module.exports = { partnerRoutes: router };
