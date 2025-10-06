@@ -4,7 +4,9 @@ const shopeModel = require("../models/shope.model");
 const servicesModel = require("../models/services.model");
 const categoryModel = require("../models/category.model");
 const Favorite = require("../models/favorite.model");
-const { ObjectId } = require("mongoose").Types;
+const { ObjectId } = require("mongodb"); // Use only this or mongoose.Types.ObjectId
+const Order = require("../models/order.model");
+
 const {
     asyncHandler,
     sendResponse,
@@ -12,10 +14,11 @@ const {
     apiResponse,
     deleteFile,
     createSearchRegex,
+    calculatePartnerEarnings, // ✅ include here
 } = require("../utils/helper.utils");
+
 const { cookieOptions } = require("../constant");
-const Order = require("../models/order.model");
-const { calculatePartnerEarnings } = require("../utils/helper.utils");
+
 
 exports.registerUser = asyncHandler(async (req, res, next) => {
     const { name, email, phoneNumber } = req.body;

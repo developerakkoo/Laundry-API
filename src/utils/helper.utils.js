@@ -222,7 +222,7 @@ function generateOTP() {
  * Formula:
  * Earnings = (Base Rate × Distance) + (Weight/Volume × Rate per Unit) + (Tips/Incentives)
  */
-exports.calculateDriverEarnings = (baseRate, distance, weightOrVolume, ratePerUnit, tipsOrIncentives = 0) => {
+const calculateDriverEarnings = (baseRate, distance, weightOrVolume, ratePerUnit, tipsOrIncentives = 0) => {
     const distanceEarnings = baseRate * distance;
     const weightEarnings = weightOrVolume * ratePerUnit;
     const totalEarnings = distanceEarnings + weightEarnings + tipsOrIncentives;
@@ -248,7 +248,7 @@ exports.calculateDriverEarnings = (baseRate, distance, weightOrVolume, ratePerUn
  * Formula:
  * Earnings = (Commission Percentage × Total Order Value) − (Operational Costs + Service Fees)
  */
-exports.calculatePartnerEarnings = (commissionPercentage, totalOrderValue, operationalCosts, serviceFees) => {
+const calculatePartnerEarnings = (commissionPercentage, totalOrderValue, operationalCosts, serviceFees) => {
     const commissionAmount = (commissionPercentage / 100) * totalOrderValue;
     const totalCosts = operationalCosts + serviceFees;
     const totalEarnings = commissionAmount - totalCosts;
@@ -276,4 +276,6 @@ module.exports = {
     deleteFile,
     generateOTP,
     generateAccessAndRefreshTokens,
+    calculatePartnerEarnings,
+    calculateDriverEarnings,
 };

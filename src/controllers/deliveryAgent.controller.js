@@ -3,7 +3,7 @@ const deliveryAgentDocumentModel = require("../models/deliveryAgentDocument.mode
 const deliveryAgentRating = require("../models/deliveryAgentRating.model");
 const Payout = require('../models/payout.model');
 const Order = require("../models/order.model");
-const { ObjectId } = require("mongoose").Types;
+const { ObjectId } = require("mongodb");
 const mongoose = require("mongoose");
 const { cookieOptions } = require("../constant");
 const {
@@ -178,8 +178,11 @@ exports.getDriverEarnings = asyncHandler(async (req, res) => {
         return sendResponse(res, 400, null, "deliveryAgentId is required");
     }
 
-    // Fetch delivered orders assigned to this driver
-    const orders = await Order.find({ deliveryAgentId });
+    // Convert string to ObjectId
+    const agentObjectId = new ObjectId(deliveryAgentId);
+
+    // Fetch orders assigned to this delivery agent
+    const orders = await Order.find({ orderDeliveryAgentId: agentObjectId });
 
     if (!orders || orders.length === 0) {
         return sendResponse(res, 404, null, "No orders found for this driver");
@@ -189,9 +192,11 @@ exports.getDriverEarnings = asyncHandler(async (req, res) => {
         const {
             distance = 0,
             weight = 0,
-            baseRate = 15,       // Default base rate
-            ratePerUnit = 5,     // Default rate per kg
-            tips = 0,            // Tips/Incentives
+            priceDetails: {
+                baseRate = 15,    // Default base rate
+                ratePerUnit = 5,  // Default rate per kg
+                tips = 0          // Tips/Incentives
+            } = {}
         } = order;
 
         return calculateDriverEarnings(
