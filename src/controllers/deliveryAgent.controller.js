@@ -14,7 +14,9 @@ const {
     generateAccessAndRefreshTokens,
 } = require("../utils/helper.utils");
 const moment = require("moment");
-const { calculateDriverEarnings } = require("../utils/helper.utils");
+const { calculateDriverEarnings, calculateDistanceInKm } = require("../utils/helper.utils");
+const UserAddress = require("../models/userAddress.model");
+
 
 exports.register = asyncHandler(async (req, res) => {
     const { name, email, phoneNumber, password } = req.body;
@@ -178,7 +180,6 @@ exports.getDriverEarnings = asyncHandler(async (req, res) => {
         return sendResponse(res, 400, null, "deliveryAgentId is required");
     }
 
-    // Convert string to ObjectId
     const agentObjectId = new ObjectId(deliveryAgentId);
 
     // Fetch orders assigned to this delivery agent
@@ -188,34 +189,69 @@ exports.getDriverEarnings = asyncHandler(async (req, res) => {
         return sendResponse(res, 404, null, "No orders found for this driver");
     }
 
-    const earningsData = orders.map((order) => {
-        const {
-            distance = 0,
-            weight = 0,
-            priceDetails: {
-                baseRate = 15,    // Default base rate
-                ratePerUnit = 5,  // Default rate per kg
-                tips = 0          // Tips/Incentives
-            } = {}
-        } = order;
+    const earningsData = [];
 
-        return calculateDriverEarnings(
-            baseRate,
-            distance,
-            weight,
-            ratePerUnit,
-            tips
-        );
-    });
+    for (const order of orders) {
+        try {
+            // Convert string IDs to ObjectId
+            let pickupId = order.pickupAddress;
+            let dropId = order.dropoffAddress;
+
+            let pickup = pickupId ? await UserAddress.findById(pickupId) : null;
+            let drop = dropId ? await UserAddress.findById(dropId) : null;
+
+            // If missing, try to fetch from the user as fallback
+            if (!pickup) {
+                pickup = await UserAddress.findOne({ userId: order.userId, type: "Home" });
+                if (pickup) pickupId = pickup._id;
+            }
+
+            if (!drop) {
+                drop = await UserAddress.findOne({ userId: order.userId, type: "Delivery" });
+                if (drop) dropId = drop._id;
+            }
+
+            // Still missing? Log warning and skip
+            if (!pickup || !drop) {
+                console.warn(`Missing address for order ${order._id}`);
+                continue;
+            }
+
+            // Extract coordinates
+            const pickupCoords = pickup.location.coordinates;
+            const dropCoords = drop.location.coordinates;
+
+            // Calculate distance (km)
+            const distance = calculateDistanceInKm(pickupCoords, dropCoords);
+
+            // Weight from order (fallback 0)
+            const weight = order.weightInKGOnPickup || 0;
+
+            // Price details fallback
+            const { baseRate = 15, ratePerUnit = 5, tips = 0 } = order.priceDetails || {};
+
+            // Calculate earnings
+            const earnings = calculateDriverEarnings(baseRate, distance, weight, ratePerUnit, tips);
+
+            earningsData.push({
+                orderId: order.orderId,
+                distance: Number(distance.toFixed(2)),
+                weight,
+                earnings: earnings.totalEarnings,
+                breakdown: earnings,
+            });
+        } catch (err) {
+            console.error("Error processing order:", order._id, err);
+        }
+    }
 
     // Sum up total earnings
-    const totalEarnings = earningsData.reduce(
-        (sum, item) => sum + item.totalEarnings,
-        0
-    );
+    const totalEarnings = earningsData.reduce((sum, e) => sum + e.earnings, 0);
 
     return sendResponse(res, 200, { totalEarnings, earningsData }, "Driver earnings fetched successfully");
 });
+
+
 
 exports.getDeliveryAgentById = asyncHandler(async (req, res) => {
     const user = await deliveryAgentModel.findById(req.params.id);

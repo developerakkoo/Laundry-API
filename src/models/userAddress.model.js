@@ -40,7 +40,7 @@ const userAddressSchema = new Schema(
             coordinates: {
                 type: [Number], // Longitude and latitude
                 required: true,
-                default: 0,
+                 default: [0, 0],
             },
         },
     },
