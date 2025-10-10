@@ -182,7 +182,7 @@ exports.getDriverEarnings = asyncHandler(async (req, res) => {
 
     const agentObjectId = new ObjectId(deliveryAgentId);
 
-    // Fetch orders assigned to this delivery agent
+    // Fetch all orders assigned to this delivery agent
     const orders = await Order.find({ orderDeliveryAgentId: agentObjectId });
 
     if (!orders || orders.length === 0) {
@@ -193,14 +193,13 @@ exports.getDriverEarnings = asyncHandler(async (req, res) => {
 
     for (const order of orders) {
         try {
-            // Convert string IDs to ObjectId
             let pickupId = order.pickupAddress;
             let dropId = order.dropoffAddress;
 
             let pickup = pickupId ? await UserAddress.findById(pickupId) : null;
             let drop = dropId ? await UserAddress.findById(dropId) : null;
 
-            // If missing, try to fetch from the user as fallback
+            // If missing, try to fetch default Home/Delivery addresses
             if (!pickup) {
                 pickup = await UserAddress.findOne({ userId: order.userId, type: "Home" });
                 if (pickup) pickupId = pickup._id;
@@ -211,45 +210,56 @@ exports.getDriverEarnings = asyncHandler(async (req, res) => {
                 if (drop) dropId = drop._id;
             }
 
-            // Still missing? Log warning and skip
+            // Still missing? skip this order
             if (!pickup || !drop) {
-                console.warn(`Missing address for order ${order._id}`);
+                console.warn(`⚠️ Missing address for order ${order._id}`);
                 continue;
             }
 
-            // Extract coordinates
-            const pickupCoords = pickup.location.coordinates;
-            const dropCoords = drop.location.coordinates;
+            // ✅ Extract coordinates (ensure they exist)
+            const pickupCoords = pickup.location?.coordinates || [];
+            const dropCoords = drop.location?.coordinates || [];
 
-            // Calculate distance (km)
+            if (pickupCoords.length < 2 || dropCoords.length < 2) {
+                console.warn(`⚠️ Invalid coordinates for order ${order._id}`);
+                continue;
+            }
+
+            // ✅ Calculate distance in km
             const distance = calculateDistanceInKm(pickupCoords, dropCoords);
 
-            // Weight from order (fallback 0)
+            // ✅ Weight and pricing details
             const weight = order.weightInKGOnPickup || 0;
-
-            // Price details fallback
             const { baseRate = 15, ratePerUnit = 5, tips = 0 } = order.priceDetails || {};
 
-            // Calculate earnings
+            // ✅ Calculate earnings using helper
             const earnings = calculateDriverEarnings(baseRate, distance, weight, ratePerUnit, tips);
 
             earningsData.push({
                 orderId: order.orderId,
                 distance: Number(distance.toFixed(2)),
                 weight,
-                earnings: earnings.totalEarnings,
-                breakdown: earnings,
+                totalEarnings: earnings.totalEarnings.toFixed(2),
+                breakdown: earnings.breakdown,
             });
         } catch (err) {
-            console.error("Error processing order:", order._id, err);
+            console.error("❌ Error processing order:", order._id, err);
         }
     }
 
-    // Sum up total earnings
-    const totalEarnings = earningsData.reduce((sum, e) => sum + e.earnings, 0);
+    // ✅ Calculate grand total
+    const totalEarnings = earningsData.reduce(
+        (sum, item) => sum + parseFloat(item.totalEarnings),
+        0
+    );
 
-    return sendResponse(res, 200, { totalEarnings, earningsData }, "Driver earnings fetched successfully");
+    // ✅ Return final structured response
+    return sendResponse(res, 200, {
+        totalEarnings: totalEarnings.toFixed(2),
+        earningsData
+    }, "Driver earnings fetched successfully");
 });
+
 
 
 
